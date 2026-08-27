@@ -1,0 +1,12 @@
+[submodule "repos/Network-Threat-Anomaly-Visualizer"]
+	path = repos/Network-Threat-Anomaly-Visualizer
+	url = https://github.com/SabarishR08/Network-Threat-Anomaly-Visualizer.git
+[submodule "repos/cyber-killchain-reconstruction-engine"]
+	path = repos/cyber-killchain-reconstruction-engine
+	url = https://github.com/SabarishR08/cyber-killchain-reconstruction-engine.git
+[submodule "repos/network-intrusion-detection"]
+	path = repos/network-intrusion-detection
+	url = https://github.com/SabarishR08/network-intrusion-detection.git
+[submodule "repos/network-port-scanner"]
+	path = repos/network-port-scanner
+	url = https://github.com/SabarishR08/network-port-scanner.git

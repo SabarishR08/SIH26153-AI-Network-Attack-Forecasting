@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Overview — NetWatch{% endblock %}
+
+{% block content %}
+<!-- Page header -->
+<div class="mb-6 flex items-end justify-between">
+  <div>
+    <h1 class="text-xl font-semibold text-white">Threat Overview</h1>
+    <p class="text-muted text-sm mt-0.5">Real-time network attack detection &amp; escalation forecasting</p>
+  </div>
+  <div id="pipeline-status-badge" class="text-xs px-2 py-1 rounded-full bg-border text-muted">No data yet</div>
+</div>
+
+<!-- ── Stat cards row ─────────────────────────────────────── -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="stat-cards">
+  <div class="stat-card">
+    <p class="stat-label">Packets Captured</p>
+    <p class="stat-value" id="stat-packets">—</p>
+    <p class="stat-sub" id="stat-ips">— unique sources</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Anomalies Detected</p>
+    <p class="stat-value text-high" id="stat-anomalies">—</p>
+    <p class="stat-sub" id="stat-anomaly-types">—</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Escalation Forecast</p>
+    <p class="stat-value text-critical" id="stat-escalations">—</p>
+    <p class="stat-sub" id="stat-esc-prob">avg prob —</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Kill Chain Incidents</p>
+    <p class="stat-value text-medium" id="stat-incidents">—</p>
+    <p class="stat-sub" id="stat-mitre">— MITRE techniques</p>
+  </div>
+</div>
+
+<!-- ── Model badges ──────────────────────────────────────── -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <!-- Model A -->
+  <div class="bg-card border border-border rounded-xl p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <p class="text-xs text-muted uppercase tracking-wide">Model A — Point-in-Time Classifier</p>
+        <p class="text-white font-medium text-sm mt-0.5" id="model-a-name">PS40 · RandomForest / GradientBoosting</p>
+      </div>
+      <span class="model-badge bg-accent/20 text-low border border-accent/30">Active</span>
+    </div>
+    <div class="grid grid-cols-3 gap-3 mt-3">
+      <div class="text-center">
+        <p class="text-lg font-semibold text-white" id="model-a-acc">—</p>
+        <p class="text-xs text-muted">Accuracy</p>
+      </div>
+      <div class="text-center">
+        <p class="text-lg font-semibold text-white" id="model-a-f1">—</p>
+        <p class="text-xs text-muted">F1</p>
+      </div>
+      <div class="text-center">
+        <p class="text-lg font-semibold text-white" id="model-a-auc">—</p>
+        <p class="text-xs text-muted">ROC-AUC</p>
+      </div>
+    </div>
+    <p class="text-xs text-muted mt-3">Flags known attack rows from NSL-KDD-style feature vectors.</p>
+  </div>
+
+  <!-- Model B -->
+  <div class="bg-card border border-border rounded-xl p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <p class="text-xs text-muted uppercase tracking-wide">Model B — Escalation Forecaster</p>
+        <p class="text-white font-medium text-sm mt-0.5">Gradient Boosting · 30s sliding windows</p>
+      </div>
+      <span id="model-b-badge" class="model-badge bg-medium/20 text-medium border border-medium/30">Checking…</span>
+    </div>
+    <div class="grid grid-cols-3 gap-3 mt-3">
+      <div class="text-center">
+        <p class="text-lg font-semibold text-white" id="model-b-windows">—</p>
+        <p class="text-xs text-muted">Windows</p>
+      </div>
+      <div class="text-center">
+        <p class="text-lg font-semibold text-white" id="model-b-esc">—</p>
+        <p class="text-xs text-muted">Escalations</p>
+      </div>
+      <div class="text-center">
+        <p class="text-lg font-semibold text-white" id="model-b-prob">—</p>
+        <p class="text-xs text-muted">Avg Prob</p>
+      </div>
+    </div>
+    <p class="text-xs text-muted mt-3">Forecasts attacks <em>before</em> full execution using early recon signals.</p>
+  </div>
+</div>
+
+<!-- ── Charts row ─────────────────────────────────────────── -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+  <!-- Anomaly timeline sparkline -->
+  <div class="lg:col-span-2 bg-card border border-border rounded-xl p-4">
+    <p class="text-sm font-medium text-white mb-3">Anomaly Timeline</p>
+    <div id="chart-timeline" class="h-44"></div>
+  </div>
+
+  <!-- Severity donut -->
+  <div class="bg-card border border-border rounded-xl p-4">
+    <p class="text-sm font-medium text-white mb-3">Severity Distribution</p>
+    <div id="chart-severity" class="h-44"></div>
+  </div>
+</div>
+
+<!-- ── Protocol distribution + Kill chain stages ─────────── -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+  <div class="bg-card border border-border rounded-xl p-4">
+    <p class="text-sm font-medium text-white mb-3">Protocol Mix</p>
+    <div id="chart-protocols" class="h-40"></div>
+  </div>
+  <div class="bg-card border border-border rounded-xl p-4">
+    <p class="text-sm font-medium text-white mb-3">Kill Chain Stage Distribution</p>
+    <div id="chart-stages" class="h-40"></div>
+  </div>
+</div>
+
+<!-- ── Recent anomalies table ─────────────────────────────── -->
+<div class="bg-card border border-border rounded-xl p-4">
+  <div class="flex items-center justify-between mb-3">
+    <p class="text-sm font-medium text-white">Recent Anomalies</p>
+    <a href="/events" class="text-xs text-medium hover:underline">View all →</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs">
+      <thead>
+        <tr class="text-muted border-b border-border">
+          <th class="text-left py-2 pr-4 font-medium">Time</th>
+          <th class="text-left py-2 pr-4 font-medium">Type</th>
+          <th class="text-left py-2 pr-4 font-medium">Source IP</th>
+          <th class="text-left py-2 pr-4 font-medium">Target IP</th>
+          <th class="text-left py-2 font-medium">Severity</th>
+        </tr>
+      </thead>
+      <tbody id="recent-anomalies-tbody" class="divide-y divide-border">
+        <tr><td colspan="5" class="py-6 text-center text-muted">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/overview.js') }}"></script>
+{% endblock %}

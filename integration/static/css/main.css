@@ -1,0 +1,160 @@
+/* NetWatch — SIH26153 Dashboard Styles */
+
+/* ── Nav links ──────────────────────────────────────────── */
+.nav-link {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  color: #8b949e;
+  font-size: 0.75rem;
+  transition: color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+.nav-link:hover { color: #e6edf3; background: #21262d; }
+.nav-active      { color: #e6edf3 !important; background: #21262d; }
+
+/* ── Stat cards ─────────────────────────────────────────── */
+.stat-card {
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+.stat-label {
+  font-size: 0.7rem;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #e6edf3;
+  line-height: 1;
+}
+.stat-sub {
+  font-size: 0.7rem;
+  color: #8b949e;
+  margin-top: 0.35rem;
+}
+
+/* ── Model badge ────────────────────────────────────────── */
+.model-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Severity pills ─────────────────────────────────────── */
+.sev-critical {
+  background: rgba(248,81,73,0.15);
+  color: #f85149;
+  border: 1px solid rgba(248,81,73,0.3);
+}
+.sev-high {
+  background: rgba(227,179,65,0.15);
+  color: #e3b341;
+  border: 1px solid rgba(227,179,65,0.3);
+}
+.sev-medium {
+  background: rgba(88,166,255,0.15);
+  color: #58a6ff;
+  border: 1px solid rgba(88,166,255,0.3);
+}
+.sev-low {
+  background: rgba(63,185,80,0.15);
+  color: #3fb950;
+  border: 1px solid rgba(63,185,80,0.3);
+}
+
+.sev-pill {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Priority labels ────────────────────────────────────── */
+.priority-CRITICAL { background: rgba(248,81,73,0.2); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+.priority-HIGH     { background: rgba(227,179,65,0.2); color: #e3b341; border: 1px solid rgba(227,179,65,0.3); }
+.priority-MEDIUM   { background: rgba(88,166,255,0.2); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3); }
+.priority-LOW      { background: rgba(63,185,80,0.2);  color: #3fb950; border: 1px solid rgba(63,185,80,0.3);  }
+
+/* ── Filter selects ─────────────────────────────────────── */
+.filter-select {
+  background: #161b22;
+  border: 1px solid #21262d;
+  color: #8b949e;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.375rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.filter-select:hover,
+.filter-select:focus { border-color: #58a6ff; color: #e6edf3; }
+
+/* ── Table rows ─────────────────────────────────────────── */
+tbody tr:hover { background: rgba(33,38,45,0.6); cursor: pointer; }
+
+/* ── Drawer ─────────────────────────────────────────────── */
+#event-drawer {
+  box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+}
+
+/* ── Forecast probability bar ───────────────────────────── */
+.prob-bar-bg {
+  height: 4px;
+  background: #21262d;
+  border-radius: 2px;
+  overflow: hidden;
+  width: 80px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.prob-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* ── Graph tooltip ──────────────────────────────────────── */
+#graph-tooltip {
+  pointer-events: none;
+  position: fixed;
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #e6edf3;
+  z-index: 100;
+  display: none;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0f1117; }
+::-webkit-scrollbar-thumb { background: #21262d; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #30363d; }
+
+/* ── Animations ─────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.25s ease-out; }
+
+/* ── Plotly dark overrides ──────────────────────────────── */
+.js-plotly-plot .plotly .main-svg { background: transparent !important; }
+.js-plotly-plot .plotly .bg { fill: transparent !important; }

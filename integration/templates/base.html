@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}NetWatch — SIH26153{% endblock %}</title>
+
+  <!-- Tailwind (CDN for prototype) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            surface:  '#0f1117',
+            card:     '#161b22',
+            border:   '#21262d',
+            accent:   '#238636',
+            muted:    '#8b949e',
+            critical: '#f85149',
+            high:     '#e3b341',
+            medium:   '#58a6ff',
+            low:      '#3fb950',
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+</head>
+
+<body class="bg-surface text-gray-200 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- ── Top nav ─────────────────────────────────────────── -->
+  <header class="border-b border-border bg-card px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <!-- pulse dot -->
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-low opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-low"></span>
+      </span>
+      <a href="/" class="text-white font-semibold tracking-tight text-sm">NetWatch</a>
+      <span class="text-muted text-xs px-2 py-0.5 rounded border border-border">SIH-26153</span>
+    </div>
+
+    <nav class="flex items-center gap-1 text-xs">
+      <a href="/"           class="nav-link {% if request.path == '/' %}nav-active{% endif %}">Overview</a>
+      <a href="/events"     class="nav-link {% if request.path == '/events' %}nav-active{% endif %}">Events</a>
+      <a href="/graph"      class="nav-link {% if request.path == '/graph' %}nav-active{% endif %}">Attack Graph</a>
+      <a href="/killchain"  class="nav-link {% if request.path == '/killchain' %}nav-active{% endif %}">Kill Chain</a>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <span id="last-updated" class="text-muted text-xs hidden sm:block">—</span>
+      <button id="run-pipeline-btn"
+              class="text-xs px-3 py-1.5 rounded bg-accent text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 3l14 9-14 9V3z"/>
+        </svg>
+        Run Pipeline
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Pipeline toast ─────────────────────────────────── -->
+  <div id="pipeline-toast" class="hidden fixed bottom-5 right-5 z-50 max-w-sm bg-card border border-border rounded-lg shadow-xl px-4 py-3 text-sm">
+    <div class="flex items-start gap-3">
+      <span id="toast-icon" class="mt-0.5 text-medium">⏳</span>
+      <div>
+        <p id="toast-title" class="font-medium text-white">Running pipeline…</p>
+        <p id="toast-body" class="text-muted text-xs mt-0.5">This may take 15–30 seconds.</p>
+      </div>
+      <button onclick="document.getElementById('pipeline-toast').classList.add('hidden')"
+              class="ml-auto text-muted hover:text-white">✕</button>
+    </div>
+  </div>
+
+  <!-- ── Main content ────────────────────────────────────── -->
+  <main class="flex-1 px-6 py-6 max-w-screen-2xl mx-auto w-full">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────── -->
+  <footer class="border-t border-border text-muted text-xs px-6 py-3 flex justify-between items-center">
+    <span>SIH-26153 · AI-Based Network Attack Forecasting · NTRO</span>
+    <span>Built with NTAV · PS40 · Killchain Engine</span>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

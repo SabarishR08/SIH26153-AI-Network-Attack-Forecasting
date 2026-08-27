@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: netwatch-sih26153
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 integration.app:app
+    envVars:
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: ENABLE_FORECASTING_MODEL
+        value: "1"
+      - key: ENABLE_KILLCHAIN
+        value: "1"

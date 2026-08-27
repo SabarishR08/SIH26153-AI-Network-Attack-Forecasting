@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Kill Chain — NetWatch{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-end justify-between">
+  <div>
+    <h1 class="text-xl font-semibold text-white">Kill Chain &amp; MITRE ATT&amp;CK</h1>
+    <p class="text-muted text-sm mt-0.5">Correlated incident sequences enriched with MITRE technique IDs</p>
+  </div>
+  <span class="text-xs text-muted px-2 py-1 border border-border rounded">Rule-based · Batch · Explainable</span>
+</div>
+
+<!-- Incident list -->
+<div class="space-y-3" id="incident-list">
+  <div class="py-10 text-center text-muted text-sm">Loading incidents…</div>
+</div>
+
+<!-- Empty state -->
+<div id="no-incidents" class="hidden bg-card border border-border rounded-xl p-10 text-center">
+  <p class="text-white font-medium mb-1">No incidents detected yet</p>
+  <p class="text-muted text-sm">Run the pipeline from the top-right button to generate data.</p>
+</div>
+
+<!-- Incident card template (cloned by JS) -->
+<template id="incident-tpl">
+  <div class="bg-card border border-border rounded-xl p-5 hover:border-medium/50 transition-colors">
+    <div class="flex items-start justify-between gap-4">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="incident-priority text-xs font-semibold px-2 py-0.5 rounded-full"></span>
+          <span class="incident-pattern text-sm font-medium text-white"></span>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-muted flex-wrap">
+          <span>Entity: <span class="incident-entity text-white font-mono"></span></span>
+          <span>Stage: <span class="incident-stage text-white"></span></span>
+          <span>Events: <span class="incident-events text-white"></span></span>
+        </div>
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-xs text-muted">Risk Score</p>
+        <p class="incident-score text-xl font-semibold text-white"></p>
+      </div>
+    </div>
+
+    <!-- MITRE strip -->
+    <div class="mt-3 pt-3 border-t border-border flex items-center gap-3 flex-wrap">
+      <span class="text-xs text-muted">MITRE ATT&amp;CK</span>
+      <span class="incident-technique-id font-mono text-xs px-2 py-0.5 rounded bg-border text-medium"></span>
+      <span class="incident-technique-name text-xs text-white"></span>
+      <span class="text-muted text-xs">—</span>
+      <span class="incident-tactic text-xs text-muted italic"></span>
+    </div>
+
+    <!-- Description -->
+    <p class="incident-description text-xs text-muted mt-2 leading-relaxed"></p>
+  </div>
+</template>
+
+<!-- MITRE coverage summary -->
+<div class="mt-6 bg-card border border-border rounded-xl p-4">
+  <p class="text-sm font-medium text-white mb-3">MITRE ATT&amp;CK Coverage</p>
+  <div id="mitre-coverage" class="flex flex-wrap gap-2">
+    <span class="text-xs text-muted">No data</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/killchain.js') }}"></script>
+{% endblock %}

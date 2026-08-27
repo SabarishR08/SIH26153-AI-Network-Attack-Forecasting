@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Attack Graph — NetWatch{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-end justify-between">
+  <div>
+    <h1 class="text-xl font-semibold text-white">Attack Graph</h1>
+    <p class="text-muted text-sm mt-0.5">Network-flow relationships between attacker and target IPs</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5 text-xs">
+      <span class="w-2.5 h-2.5 rounded-full bg-critical inline-block"></span><span class="text-muted">Critical</span>
+      <span class="w-2.5 h-2.5 rounded-full bg-high inline-block ml-2"></span><span class="text-muted">High</span>
+      <span class="w-2.5 h-2.5 rounded-full bg-medium inline-block ml-2"></span><span class="text-muted">Medium</span>
+      <span class="w-2.5 h-2.5 rounded-full bg-low inline-block ml-2"></span><span class="text-muted">Low</span>
+    </div>
+  </div>
+</div>
+
+<!-- Graph canvas -->
+<div class="bg-card border border-border rounded-xl p-4 mb-4">
+  <div id="attack-graph" class="w-full" style="height: 520px;"></div>
+</div>
+
+<!-- Stats below graph -->
+<div class="grid grid-cols-3 gap-4">
+  <div class="bg-card border border-border rounded-xl p-4 text-center">
+    <p class="text-2xl font-semibold text-white" id="g-node-count">—</p>
+    <p class="text-xs text-muted mt-1">Total Nodes</p>
+  </div>
+  <div class="bg-card border border-border rounded-xl p-4 text-center">
+    <p class="text-2xl font-semibold text-white" id="g-edge-count">—</p>
+    <p class="text-xs text-muted mt-1">Attack Edges</p>
+  </div>
+  <div class="bg-card border border-border rounded-xl p-4 text-center">
+    <p class="text-2xl font-semibold text-white" id="g-attacker-count">—</p>
+    <p class="text-xs text-muted mt-1">Unique Attackers</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/graph.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Events — NetWatch{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-end justify-between">
+  <div>
+    <h1 class="text-xl font-semibold text-white">Anomaly Events</h1>
+    <p class="text-muted text-sm mt-0.5">All detected network anomalies with Model A &amp; B classifications</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <select id="filter-severity" class="filter-select">
+      <option value="">All severities</option>
+      <option value="CRITICAL">Critical</option>
+      <option value="HIGH">High</option>
+      <option value="MEDIUM">Medium</option>
+      <option value="LOW">Low</option>
+    </select>
+    <select id="filter-type" class="filter-select">
+      <option value="">All types</option>
+      <option value="Port Scan">Port Scan</option>
+      <option value="Brute Force">Brute Force</option>
+      <option value="Connection Cycling">Connection Cycling</option>
+    </select>
+    <button id="refresh-events" class="text-xs px-3 py-1.5 rounded border border-border text-muted hover:text-white hover:border-medium transition-colors">
+      Refresh
+    </button>
+  </div>
+</div>
+
+<!-- Summary bar -->
+<div class="grid grid-cols-4 gap-3 mb-4" id="event-summary">
+  <div class="bg-card border border-border rounded-lg px-3 py-2 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-critical"></span>
+    <span class="text-xs text-muted">Critical</span>
+    <span class="ml-auto text-white font-semibold text-sm" id="cnt-critical">—</span>
+  </div>
+  <div class="bg-card border border-border rounded-lg px-3 py-2 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-high"></span>
+    <span class="text-xs text-muted">High</span>
+    <span class="ml-auto text-white font-semibold text-sm" id="cnt-high">—</span>
+  </div>
+  <div class="bg-card border border-border rounded-lg px-3 py-2 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-medium"></span>
+    <span class="text-xs text-muted">Medium</span>
+    <span class="ml-auto text-white font-semibold text-sm" id="cnt-medium">—</span>
+  </div>
+  <div class="bg-card border border-border rounded-lg px-3 py-2 flex items-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-low"></span>
+    <span class="text-xs text-muted">Low</span>
+    <span class="ml-auto text-white font-semibold text-sm" id="cnt-low">—</span>
+  </div>
+</div>
+
+<!-- Events table -->
+<div class="bg-card border border-border rounded-xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs">
+      <thead>
+        <tr class="text-muted border-b border-border bg-surface">
+          <th class="text-left px-4 py-3 font-medium">Timestamp</th>
+          <th class="text-left px-4 py-3 font-medium">Type</th>
+          <th class="text-left px-4 py-3 font-medium">Source IP</th>
+          <th class="text-left px-4 py-3 font-medium">Target IP / Port</th>
+          <th class="text-left px-4 py-3 font-medium">Severity</th>
+          <th class="text-left px-4 py-3 font-medium">Confidence</th>
+          <th class="text-left px-4 py-3 font-medium">Model B Forecast</th>
+          <th class="text-left px-4 py-3 font-medium">Detail</th>
+        </tr>
+      </thead>
+      <tbody id="events-tbody" class="divide-y divide-border">
+        <tr><td colspan="8" class="py-10 text-center text-muted">Loading events…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="px-4 py-3 border-t border-border flex items-center justify-between">
+    <span class="text-xs text-muted" id="events-count">0 events</span>
+    <div class="flex gap-2">
+      <button id="prev-page" class="text-xs px-2 py-1 rounded border border-border text-muted hover:text-white disabled:opacity-40">← Prev</button>
+      <span class="text-xs text-muted self-center" id="page-indicator">Page 1</span>
+      <button id="next-page" class="text-xs px-2 py-1 rounded border border-border text-muted hover:text-white disabled:opacity-40">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Row detail drawer -->
+<div id="event-drawer" class="hidden fixed inset-y-0 right-0 w-96 bg-card border-l border-border z-40 overflow-y-auto p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-semibold text-white">Event Detail</h2>
+    <button onclick="closeDrawer()" class="text-muted hover:text-white text-lg">✕</button>
+  </div>
+  <div id="drawer-content" class="text-xs space-y-3 text-muted"></div>
+</div>
+<div id="drawer-overlay" class="hidden fixed inset-0 bg-black/40 z-30" onclick="closeDrawer()"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/events.js') }}"></script>
+{% endblock %}

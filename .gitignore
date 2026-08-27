@@ -1,0 +1,58 @@
+# ── Secrets ────────────────────────────────────────────────
+.env
+*.key
+*.pem
+secrets/
+
+# ── Python ─────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Virtual environments ────────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+
+# ── Data files (large, generated at runtime) ───────────────
+data/*.jsonl
+data/*.json
+data/*.csv
+data/*.pkl
+data/*.html
+data/*.png
+!data/.gitkeep
+
+# ── Trained models ─────────────────────────────────────────
+*.pkl
+*.joblib
+repos/network-intrusion-detection/models/
+
+# ── IDE / OS ────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# ── Logs ───────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Render / Vercel ────────────────────────────────────────
+.vercel/
+
+# ── Sub-repo git history (kept locally for provenance, not pushed) ──
+repos/*/.git/
+repos/*/_git_*/
+
+# ── Kiro IDE ───────────────────────────────────────────────
+.freebuff/

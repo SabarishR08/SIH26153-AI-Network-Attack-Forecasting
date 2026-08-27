@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetWatch — AI Network Attack Forecasting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#0a0a0f',
+                        card: '#12121a',
+                        border: '#1e1e2e',
+                        muted: '#6b7280',
+                        critical: '#ef4444',
+                        high: '#f97316',
+                        medium: '#eab308',
+                        low: '#22c55e',
+                        accent: '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="dark bg-bg text-white min-h-screen">
+    <div id="app" class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">🛡️ NetWatch</h1>
+                    <p class="text-muted text-sm">AI-Based Network Attack Forecasting — SIH26153</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="status-badge" class="text-xs px-3 py-1 rounded-full bg-border text-muted">
+                        Connecting...
+                    </div>
+                    <a href="/api/docs" target="_blank" class="text-xs text-accent hover:underline">
+                        API Docs →
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex gap-4 mb-6 text-sm">
+            <a href="/" class="nav-link active" data-page="overview">Overview</a>
+            <a href="/events" class="nav-link" data-page="events">Events</a>
+            <a href="/graph" class="nav-link" data-page="graph">Attack Graph</a>
+            <a href="/killchain" class="nav-link" data-page="killchain">Kill Chain</a>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card">
+                    <p class="stat-label">Packets Captured</p>
+                    <p class="stat-value" id="stat-packets">—</p>
+                    <p class="stat-sub" id="stat-ips">— unique sources</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Anomalies Detected</p>
+                    <p class="stat-value text-high" id="stat-anomalies">—</p>
+                    <p class="stat-sub" id="stat-anomaly-types">—</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Escalation Forecast</p>
+                    <p class="stat-value text-critical" id="stat-escalations">—</p>
+                    <p class="stat-sub" id="stat-esc-prob">avg prob —</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Kill Chain Incidents</p>
+                    <p class="stat-value text-medium" id="stat-incidents">—</p>
+                    <p class="stat-sub" id="stat-mitre">— MITRE techniques</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                <div class="bg-card border border-border rounded-xl p-4">
+                    <p class="text-sm font-medium text-white mb-3">Anomaly Timeline</p>
+                    <div id="chart-timeline" class="h-48"></div>
+                </div>
+                <div class="bg-card border border-border rounded-xl p-4">
+                    <p class="text-sm font-medium text-white mb-3">Severity Distribution</p>
+                    <div id="chart-severity" class="h-48"></div>
+                </div>
+            </div>
+
+            <!-- Recent Anomalies -->
+            <div class="bg-card border border-border rounded-xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-sm font-medium text-white">Recent Anomalies</p>
+                    <button onclick="refreshData()" class="text-xs text-accent hover:underline">
+                        Refresh
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="text-muted border-b border-border">
+                                <th class="text-left py-2 pr-4 font-medium">Time</th>
+                                <th class="text-left py-2 pr-4 font-medium">Type</th>
+                                <th class="text-left py-2 pr-4 font-medium">Source IP</th>
+                                <th class="text-left py-2 pr-4 font-medium">Target IP</th>
+                                <th class="text-left py-2 font-medium">Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="anomalies-tbody" class="divide-y divide-border">
+                            <tr><td colspan="5" class="py-6 text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

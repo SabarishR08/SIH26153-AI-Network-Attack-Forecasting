@@ -1,13 +1,40 @@
+# ============================================================
+# SIH26153 — Render Deployment Configuration
+# Backend API deployment
+# ============================================================
+
 services:
+  # ── Backend API ──────────────────────────────────────────
   - type: web
-    name: netwatch-sih26153
+    name: netwatch-sih26153-api
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 integration.app:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 integration.app:app
+    healthCheckPath: /api/status
     envVars:
       - key: FLASK_SECRET_KEY
         generateValue: true
+      - key: FLASK_DEBUG
+        value: "0"
       - key: ENABLE_FORECASTING_MODEL
         value: "1"
       - key: ENABLE_KILLCHAIN
         value: "1"
+      - key: RATE_LIMIT_ENABLED
+        value: "1"
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: LOG_FORMAT
+        value: "json"
+      - key: LOG_DISABLE_FILE
+        value: "1"
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+
+# ── Database (optional — add if needed) ──────────────────────
+# databases:
+#   - name: netwatch-db
+#     plan: free
+#     databaseName: netwatch
+#     user: netwatch

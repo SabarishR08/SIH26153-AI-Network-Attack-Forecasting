@@ -11,6 +11,7 @@ from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 
+from integration.logging_config import create_request_middleware, setup_logging
 from integration.ratelimit import api_rate_limit, docs_rate_limit, init_rate_limiting, pipeline_rate_limit
 from integration.validation import (
     validate_anomaly_params,
@@ -42,6 +43,8 @@ app = Flask(
 )
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "sih26153-dev-key-change-in-prod")
 init_rate_limiting(app)
+setup_logging()
+create_request_middleware(app)
 
 
 # ── Helpers ────────────────────────────────────────────────

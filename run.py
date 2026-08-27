@@ -52,11 +52,10 @@ for p in [
     if p not in sys.path:
         sys.path.insert(0, p)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger("run")
+from integration.logging_config import get_logger, setup_logging
+
+setup_logging()
+logger = get_logger("run")
 
 
 def run_pipeline(reuse_data: bool = False):

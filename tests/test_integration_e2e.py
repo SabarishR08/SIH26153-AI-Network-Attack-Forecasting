@@ -576,6 +576,8 @@ class TestRunPipelineEndpoint:
     def test_pipeline_returns_result(self, client, monkeypatch):
         import integration.pipeline_runner as pr
         import integration.model_forecaster as mf
+        from integration.ratelimit import get_counter
+        get_counter().clear()  # Reset rate limiter for this test
         monkeypatch.setattr(mf, "ENABLE_FORECASTING_MODEL", False)
         monkeypatch.setattr(pr, "ENABLE_FORECASTING_MODEL", False)
         monkeypatch.setattr(pr, "ENABLE_KILLCHAIN", False)

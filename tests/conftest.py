@@ -22,6 +22,15 @@ for p in [
         sys.path.insert(0, p)
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """Reset rate limiter state between tests to prevent cross-test leaks."""
+    from integration.ratelimit import get_counter
+    get_counter().clear()
+    yield
+    get_counter().clear()
+
+
 @pytest.fixture
 def client():
     """Create a Flask test client available to all test modules."""

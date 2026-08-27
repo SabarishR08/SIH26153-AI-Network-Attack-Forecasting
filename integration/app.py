@@ -11,6 +11,7 @@ from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 
+from integration.ratelimit import api_rate_limit, docs_rate_limit, init_rate_limiting, pipeline_rate_limit
 from integration.validation import (
     validate_anomaly_params,
     validate_forecast_params,
@@ -40,6 +41,7 @@ app = Flask(
     static_folder=str(Path(__file__).parent / "static"),
 )
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "sih26153-dev-key-change-in-prod")
+init_rate_limiting(app)
 
 
 # ── Helpers ────────────────────────────────────────────────
@@ -106,6 +108,7 @@ def killchain_page():
 # ── API: Dashboard Summary ──────────────────────────────────
 
 @app.route("/api/dashboard")
+@api_rate_limit
 def api_dashboard():
     packets   = _load_jsonl(PACKETS_FILE)
     anomalies = _load_jsonl(ANOMALIES_FILE)
@@ -192,6 +195,7 @@ def api_dashboard():
 # ── API: Individual Data Streams ────────────────────────────
 
 @app.route("/api/anomalies")
+@api_rate_limit
 def api_anomalies():
     rows = _load_jsonl(ANOMALIES_FILE)
 
@@ -208,6 +212,7 @@ def api_anomalies():
 
 
 @app.route("/api/forecast")
+@api_rate_limit
 def api_forecast():
     rows = _load_jsonl(FEATURES_FILE)
 
@@ -224,11 +229,13 @@ def api_forecast():
 
 
 @app.route("/api/incidents")
+@api_rate_limit
 def api_incidents():
     return jsonify(_load_json(KILLCHAIN_INCIDENTS_FILE))
 
 
 @app.route("/api/packets")
+@api_rate_limit
 def api_packets():
     limit, error = validate_packet_params(request.args.get("limit"))
     if error:
@@ -237,6 +244,7 @@ def api_packets():
 
 
 @app.route("/api/graph")
+@api_rate_limit
 def api_graph():
     """Return attack graph as node-link JSON for Plotly/D3 rendering."""
     if GRAPH_JSON.exists():
@@ -271,6 +279,7 @@ def api_graph():
 # ── API: Pipeline Control ───────────────────────────────────
 
 @app.route("/api/run-pipeline", methods=["POST"])
+@pipeline_rate_limit
 def api_run_pipeline():
     """Trigger the full pipeline synchronously (for demo use)."""
     try:
@@ -283,6 +292,7 @@ def api_run_pipeline():
 
 
 @app.route("/api/status")
+@api_rate_limit
 def api_status():
     """Quick health/status check."""
     return jsonify({
@@ -327,6 +337,7 @@ OPENAPI_SPEC_PATH = PROJECT_ROOT / "docs" / "openapi.yaml"
 
 
 @app.route("/api/openapi.json")
+@docs_rate_limit
 def api_openapi_spec():
     """Return the OpenAPI specification as JSON."""
     import yaml
@@ -340,6 +351,7 @@ def api_openapi_spec():
 
 
 @app.route("/api/docs")
+@docs_rate_limit
 def api_docs():
     """Serve Swagger UI for API documentation."""
     swagger_ui_html = """

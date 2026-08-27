@@ -6,7 +6,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
@@ -178,7 +178,7 @@ def api_dashboard():
             "f1":         metrics.get("validation", {}).get("f1", 0),
             "roc_auc":    metrics.get("validation", {}).get("roc_auc", 0),
         },
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(UTC).isoformat() + "Z",
     })
 
 
@@ -272,7 +272,7 @@ def api_status():
         "incidents_file":  KILLCHAIN_INCIDENTS_FILE.exists(),
         "forecasting_enabled": os.getenv("ENABLE_FORECASTING_MODEL", "1") == "1",
         "killchain_enabled":   os.getenv("ENABLE_KILLCHAIN", "1") == "1",
-        "server_time": datetime.utcnow().isoformat() + "Z",
+        "server_time": datetime.now(UTC).isoformat() + "Z",
     })
 
 

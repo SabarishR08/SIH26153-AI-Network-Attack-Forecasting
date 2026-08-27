@@ -17,7 +17,7 @@ import json
 import logging
 import sys
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Dict
 
@@ -221,7 +221,7 @@ def run_full_pipeline(use_existing_packets: bool = False) -> Dict:
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     start = time.time()
-    results: Dict = {"started_at": datetime.utcnow().isoformat() + "Z"}
+    results: Dict = {"started_at": datetime.now(UTC).isoformat() + "Z"}
 
     # ── Step 1: Traffic ────────────────────────────────────
     if use_existing_packets and PACKETS_FILE.exists():
@@ -258,7 +258,7 @@ def run_full_pipeline(use_existing_packets: bool = False) -> Dict:
 
     elapsed = round(time.time() - start, 2)
     results["elapsed_sec"] = elapsed
-    results["completed_at"] = datetime.utcnow().isoformat() + "Z"
+    results["completed_at"] = datetime.now(UTC).isoformat() + "Z"
 
     errors = [k for k, v in results.items() if isinstance(v, dict) and v.get("status") == "error"]
     results["pipeline_status"] = "failed" if errors else "completed"

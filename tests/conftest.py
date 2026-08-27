@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 # Ensure the project root is on sys.path for imports
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -18,3 +20,12 @@ for p in [
 ]:
     if p not in sys.path:
         sys.path.insert(0, p)
+
+
+@pytest.fixture
+def client():
+    """Create a Flask test client available to all test modules."""
+    from integration.app import app
+    app.config["TESTING"] = True
+    with app.test_client() as c:
+        yield c

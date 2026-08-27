@@ -392,10 +392,11 @@ class TestAnomaliesEndpoint:
         for a in data:
             assert a["severity"] == "CRITICAL"
 
-    def test_filter_nonexistent_severity(self, client, full_mock_data):
+    def test_filter_nonexistent_severity_returns_400(self, client, full_mock_data):
         resp = client.get("/api/anomalies?severity=NONE")
+        assert resp.status_code == 400
         data = json.loads(resp.data)
-        assert data == []
+        assert data["error"] is True
 
     def test_limit(self, client, full_mock_data):
         resp = client.get("/api/anomalies?limit=3")

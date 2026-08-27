@@ -11,6 +11,13 @@ from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 
+from integration.validation import (
+    validate_anomaly_params,
+    validate_forecast_params,
+    validate_packet_params,
+    validation_error,
+)
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -187,19 +194,31 @@ def api_dashboard():
 @app.route("/api/anomalies")
 def api_anomalies():
     rows = _load_jsonl(ANOMALIES_FILE)
-    limit = request.args.get("limit", 500, type=int)
-    sev   = request.args.get("severity", "").upper()
-    if sev:
-        rows = [r for r in rows if str(r.get("severity", "")).upper() == sev]
+
+    limit, severity, error = validate_anomaly_params(
+        request.args.get("limit"),
+        request.args.get("severity", ""),
+    )
+    if error:
+        return validation_error(error)
+
+    if severity:
+        rows = [r for r in rows if str(r.get("severity", "")).upper() == severity]
     return jsonify(rows[-limit:])
 
 
 @app.route("/api/forecast")
 def api_forecast():
     rows = _load_jsonl(FEATURES_FILE)
-    limit = request.args.get("limit", 500, type=int)
-    only_flagged = request.args.get("flagged", "0") == "1"
-    if only_flagged:
+
+    limit, flagged, error = validate_forecast_params(
+        request.args.get("limit"),
+        request.args.get("flagged", "0"),
+    )
+    if error:
+        return validation_error(error)
+
+    if flagged:
         rows = [r for r in rows if r.get("escalation_predicted")]
     return jsonify(rows[-limit:])
 
@@ -211,7 +230,9 @@ def api_incidents():
 
 @app.route("/api/packets")
 def api_packets():
-    limit = request.args.get("limit", 200, type=int)
+    limit, error = validate_packet_params(request.args.get("limit"))
+    if error:
+        return validation_error(error)
     return jsonify(_load_jsonl(PACKETS_FILE)[:limit])
 
 

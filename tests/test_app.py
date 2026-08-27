@@ -9,14 +9,6 @@ from integration.app import app
 
 
 @pytest.fixture
-def client():
-    """Create a Flask test client."""
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
-
-
-@pytest.fixture
 def sample_data_dir(tmp_path, monkeypatch):
     """Set up a temporary data directory with sample data."""
     import integration.app as app_module

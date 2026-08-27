@@ -1,0 +1,59 @@
+# SIH26153 — Docker build context exclusions
+
+# Git
+.git
+.gitignore
+.gitmodules
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+*.egg-info
+dist
+build
+.eggs
+
+# Virtual environments
+venv
+.venv
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test artifacts
+htmlcov
+coverage.xml
+.coverage
+results.xml
+.pytest_cache
+
+# Data files (mounted as volumes in dev)
+data/*.jsonl
+data/*.json
+data/*.csv
+data/*.pkl
+
+# Node modules (if any)
+node_modules
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+docs/*.html
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local

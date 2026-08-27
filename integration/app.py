@@ -321,10 +321,58 @@ def api_stream():
             "X-Accel-Buffering": "no",
         },
     )
+# ── API Documentation ───────────────────────────────────────
+
+OPENAPI_SPEC_PATH = PROJECT_ROOT / "docs" / "openapi.yaml"
+
+
+@app.route("/api/openapi.json")
+def api_openapi_spec():
+    """Return the OpenAPI specification as JSON."""
+    import yaml
+
+    if not OPENAPI_SPEC_PATH.exists():
+        return jsonify({"error": "OpenAPI spec not found"}), 404
+
+    with open(OPENAPI_SPEC_PATH, encoding="utf-8") as f:
+        spec = yaml.safe_load(f)
+    return jsonify(spec)
+
+
+@app.route("/api/docs")
+def api_docs():
+    """Serve Swagger UI for API documentation."""
+    swagger_ui_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SIH26153 API Documentation</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css"
+              href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" >
+    </head>
+    <body>
+        <div id="swagger-ui"></div>
+        <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+        <script>
+        SwaggerUIBundle({
+            url: "/api/openapi.json",
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.SwaggerUIStandalonePreset
+            ],
+            layout: "StandaloneLayout"
+        });
+        </script>
+    </body>
+    </html>
+    """
+    return swagger_ui_html, 200, {"Content-Type": "text/html"}
 
 
 # ── Run ────────────────────────────────────────────────────
-
 if __name__ == "__main__":
     port  = int(os.getenv("PORT", 5000))
     debug = os.getenv("FLASK_DEBUG", "0") == "1"

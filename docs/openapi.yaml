@@ -1,0 +1,543 @@
+openapi: "3.0.3"
+info:
+  title: SIH26153 — AI-Based Network Attack Forecasting API
+  description: |
+    REST API for the NetWatch dashboard. Provides network traffic analysis,
+    anomaly detection, escalation forecasting, kill chain enrichment, and
+    attack graph visualization endpoints.
+  version: "1.0.0"
+  contact:
+    name: SIH26153 Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+tags:
+  - name: Dashboard
+    description: Aggregated dashboard summary
+  - name: Anomalies
+    description: Detected network anomalies
+  - name: Forecast
+    description: Escalation forecast features
+  - name: Packets
+    description: Raw packet capture data
+  - name: Graph
+    description: Attack graph visualization
+  - name: Incidents
+    description: Kill chain incidents
+  - name: Pipeline
+    description: Pipeline control
+  - name: System
+    description: Health checks and streaming
+
+paths:
+  /api/dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard summary
+      description: |
+        Returns aggregated statistics across all data sources: traffic counts,
+        anomaly breakdowns by type and severity, forecast escalation rates,
+        kill chain MITRE techniques, and model metrics.
+      operationId: getDashboard
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+
+  /api/anomalies:
+    get:
+      tags: [Anomalies]
+      summary: List detected anomalies
+      description: Returns anomaly records with optional severity filtering and pagination.
+      operationId: listAnomalies
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 500
+            minimum: 0
+            maximum: 10000
+          description: Maximum number of records to return
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [CRITICAL, HIGH, MEDIUM, LOW]
+          description: Filter by severity level
+      responses:
+        "200":
+          description: List of anomaly records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Anomaly"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/forecast:
+    get:
+      tags: [Forecast]
+      summary: List forecast features
+      description: Returns sliding-window feature vectors with escalation predictions.
+      operationId: listForecast
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 500
+            minimum: 0
+            maximum: 10000
+          description: Maximum number of records to return
+        - name: flagged
+          in: query
+          schema:
+            type: string
+            enum: ["0", "1"]
+            default: "0"
+          description: Set to "1" to return only escalation-predicted windows
+      responses:
+        "200":
+          description: List of forecast feature vectors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForecastFeature"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/packets:
+    get:
+      tags: [Packets]
+      summary: List captured packets
+      description: Returns raw packet data from the capture/simulation.
+      operationId: listPackets
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 200
+            minimum: 0
+            maximum: 10000
+          description: Maximum number of packets to return
+      responses:
+        "200":
+          description: List of packet records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Packet"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/graph:
+    get:
+      tags: [Graph]
+      summary: Get attack graph
+      description: |
+        Returns the attack graph as node-link JSON for Plotly/D3 rendering.
+        If a pre-built graph.json exists it is returned directly; otherwise
+        the graph is constructed on-the-fly from anomaly data.
+      operationId: getGraph
+      responses:
+        "200":
+          description: Attack graph with nodes and edges
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphResponse"
+
+  /api/incidents:
+    get:
+      tags: [Incidents]
+      summary: List kill chain incidents
+      description: Returns enriched incidents with MITRE ATT&CK mapping.
+      operationId: listIncidents
+      responses:
+        "200":
+          description: List of incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Incident"
+
+  /api/status:
+    get:
+      tags: [System]
+      summary: Health check
+      description: Returns server status, file existence checks, and feature flags.
+      operationId: getStatus
+      responses:
+        "200":
+          description: Server status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+
+  /api/run-pipeline:
+    post:
+      tags: [Pipeline]
+      summary: Trigger full pipeline
+      description: |
+        Runs the complete SIH26153 pipeline synchronously (traffic generation,
+        anomaly detection, forecasting, kill chain enrichment, graph building).
+        Intended for demo use — may take several seconds.
+      operationId: runPipeline
+      responses:
+        "200":
+          description: Pipeline execution result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineResponse"
+        "500":
+          description: Pipeline execution error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/stream:
+    get:
+      tags: [System]
+      summary: SSE live event stream
+      description: |
+        Server-Sent Events endpoint that pushes new anomalies in real time.
+        Each event is a JSON-encoded anomaly record.
+      operationId: streamEvents
+      responses:
+        "200":
+          description: Event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE-formatted anomaly events
+
+components:
+  schemas:
+    DashboardResponse:
+      type: object
+      properties:
+        traffic:
+          $ref: "#/components/schemas/TrafficSummary"
+        anomalies:
+          $ref: "#/components/schemas/AnomalySummary"
+        forecast:
+          $ref: "#/components/schemas/ForecastSummary"
+        killchain:
+          $ref: "#/components/schemas/KillchainSummary"
+        model_a:
+          $ref: "#/components/schemas/ModelMetrics"
+        generated_at:
+          type: string
+          format: date-time
+
+    TrafficSummary:
+      type: object
+      properties:
+        total_packets:
+          type: integer
+        unique_src_ips:
+          type: integer
+        unique_dst_ips:
+          type: integer
+        protocols:
+          type: object
+          additionalProperties:
+            type: integer
+
+    AnomalySummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        by_type:
+          type: object
+          additionalProperties:
+            type: integer
+        by_severity:
+          type: object
+          properties:
+            CRITICAL:
+              type: integer
+            HIGH:
+              type: integer
+            MEDIUM:
+              type: integer
+            LOW:
+              type: integer
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              t:
+                type: string
+              v:
+                type: integer
+
+    ForecastSummary:
+      type: object
+      properties:
+        total_windows:
+          type: integer
+        escalation_predicted:
+          type: integer
+        avg_escalation_prob:
+          type: number
+          format: float
+        enabled:
+          type: boolean
+
+    KillchainSummary:
+      type: object
+      properties:
+        total_incidents:
+          type: integer
+        mitre_techniques:
+          type: array
+          items:
+            type: string
+        stages:
+          type: object
+          additionalProperties:
+            type: integer
+
+    ModelMetrics:
+      type: object
+      properties:
+        best_model:
+          type: string
+        accuracy:
+          type: number
+        f1:
+          type: number
+        roc_auc:
+          type: number
+
+    Anomaly:
+      type: object
+      properties:
+        src_ip:
+          type: string
+        dst_ip:
+          type: string
+        anomaly_type:
+          type: string
+          enum: [Port Scan, Brute Force, Connection Cycling, Suspicious Connection]
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+        timestamp:
+          type: string
+          format: date-time
+        confidence:
+          type: number
+          format: float
+        ports_scanned:
+          type: array
+          items:
+            type: integer
+        port_count:
+          type: integer
+        dst_port:
+          type: integer
+        failed_attempts:
+          type: integer
+        service:
+          type: string
+
+    ForecastFeature:
+      type: object
+      properties:
+        src_ip:
+          type: string
+        dst_ip:
+          type: string
+        window_start:
+          type: string
+          format: date-time
+        window_end:
+          type: string
+          format: date-time
+        window_duration_sec:
+          type: number
+        total_packets:
+          type: integer
+        port_diversity:
+          type: integer
+        unique_ports:
+          type: array
+          items:
+            type: integer
+        connection_rate:
+          type: number
+        syn_count:
+          type: integer
+        rst_count:
+          type: integer
+        syn_rst_ratio:
+          type: number
+        payload_size_mean:
+          type: number
+        payload_size_max:
+          type: integer
+        escalation_probability:
+          type: number
+          format: float
+        escalation_predicted:
+          type: boolean
+
+    Packet:
+      type: object
+      properties:
+        src_ip:
+          type: string
+        dst_ip:
+          type: string
+        dst_port:
+          type: integer
+        protocol:
+          type: string
+        flags:
+          type: string
+        payload_size:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    GraphResponse:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphEdge"
+
+    GraphNode:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [attacker, target]
+        label:
+          type: string
+
+    GraphEdge:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        label:
+          type: string
+        severity:
+          type: string
+        color:
+          type: string
+          description: Hex color code
+
+    Incident:
+      type: object
+      properties:
+        pattern:
+          type: string
+        entity:
+          type: string
+        risk_score:
+          type: number
+        priority:
+          type: string
+        kill_chain_stage:
+          type: string
+        mitre:
+          type: object
+          properties:
+            technique_id:
+              type: string
+            technique_name:
+              type: string
+        event_count:
+          type: integer
+
+    StatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: running
+        packets_file:
+          type: boolean
+        anomalies_file:
+          type: boolean
+        features_file:
+          type: boolean
+        incidents_file:
+          type: boolean
+        forecasting_enabled:
+          type: boolean
+        killchain_enabled:
+          type: boolean
+        server_time:
+          type: string
+          format: date-time
+
+    PipelineResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        result:
+          type: object
+          description: Pipeline execution summary with per-step results
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+        status:
+          type: integer
+
+  responses:
+    ValidationError:
+      description: Invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: true
+            message: "Invalid limit value: 'abc' (must be an integer)"
+            status: 400

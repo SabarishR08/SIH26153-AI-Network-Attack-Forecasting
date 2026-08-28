@@ -134,6 +134,10 @@ def main():
         "--monitor", action="store_true",
         help="Start live continuous monitoring mode (capture + detect forever)"
     )
+    parser.add_argument(
+        "--auto-block", action="store_true",
+        help="Automatically apply firewall rules to block detected attackers"
+    )
     args = parser.parse_args()
 
     # Continuous monitoring mode — runs forever until Ctrl+C
@@ -144,6 +148,7 @@ def main():
         processor = LiveProcessor(
             interface=args.live_interface,
             bpf_filter=args.live_filter,
+            auto_block=args.auto_block,
         )
         try:
             processor.start()

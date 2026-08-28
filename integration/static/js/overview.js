@@ -10,8 +10,11 @@ const PLOTLY_LAYOUT_BASE = {
 
 async function loadPageData() {
   try {
-    const res  = await fetch('/api/dashboard');
-    const d    = await res.json();
+    const [dashRes, detRes] = await Promise.all([
+      fetch('/api/dashboard'),
+      fetch('/api/detection/stats').catch(() => null),
+    ]);
+    const d = await dashRes.json();
     renderStats(d);
     renderTimeline(d.anomalies?.timeline || []);
     renderSeverityDonut(d.anomalies?.by_severity || {});
@@ -20,6 +23,12 @@ async function loadPageData() {
     renderRecentAnomalies();
     document.getElementById('last-updated').textContent =
       'Updated ' + fmtTime(d.generated_at);
+
+    // Live detection stats
+    if (detRes && detRes.ok) {
+      const det = await detRes.json();
+      renderDetectionStats(det);
+    }
   } catch (err) {
     console.error('Dashboard load failed:', err);
   }
@@ -185,6 +194,40 @@ async function renderRecentAnomalies() {
         <td class="py-2">${sevPill(a.severity)}</td>
       </tr>`).join('');
   } catch { tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-muted">Error loading data</td></tr>'; }
+}
+
+// ── Live Detection Stats ──────────────────────────────────
+function renderDetectionStats(det) {
+  const liveAnomalies = det.total_anomalies || 0;
+  const sev = det.by_severity || {};
+
+  // Update stat cards
+  if (liveAnomalies > 0) {
+    const badge = document.getElementById('pipeline-status-badge');
+    if (badge) {
+      badge.textContent = `Live IDS: ${liveAnomalies} alerts`;
+      badge.className = 'text-xs px-2 py-1 rounded-full bg-critical/20 text-critical border border-critical/30';
+    }
+  }
+
+  // Populate live detection card
+  const el = (id) => document.getElementById(id);
+  if (el('live-total')) el('live-total').textContent = liveAnomalies;
+  if (el('live-critical')) el('live-critical').textContent = sev.CRITICAL || 0;
+  if (el('live-high')) el('live-high').textContent = sev.HIGH || 0;
+  if (el('live-medium')) el('live-medium').textContent = sev.MEDIUM || 0;
+
+  // Render anomaly type breakdown
+  const liveContainer = document.getElementById('live-detection-types');
+  if (liveContainer && det.by_type) {
+    const entries = Object.entries(det.by_type).sort((a,b) => b[1]-a[1]);
+    liveContainer.innerHTML = entries.map(([type, count]) =>
+      `<div class="flex justify-between items-center py-1">
+        <span class="text-xs font-medium">${type}</span>
+        <span class="text-xs font-bold">${count}</span>
+      </div>`
+    ).join('');
+  }
 }
 
 // Init + auto-refresh every 15s

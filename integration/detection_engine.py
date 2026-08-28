@@ -384,7 +384,7 @@ class PortScanDetector:
                 )
                 severity_score += 3
 
-        if stealth_packets >= self.FIN_XMAS_NULL_THRESHOLD and state.unique_dst_ports >= 3:
+        if stealth_packets >= self.FIN_XMAS_NULL_THRESHOLD and len(state.unique_dst_ports) >= 3:
             scan_type = scan_type or "FIN Scan"
             reasons.append(
                 f"{stealth_packets} FIN/URG packets to {len(state.unique_dst_ports)} ports"

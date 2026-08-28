@@ -370,6 +370,99 @@ def api_stream():
             "X-Accel-Buffering": "no",
         },
     )
+# ── API: Real-Time Detection Stats ─────────────────────────
+@app.route("/api/detection/stats")
+@api_rate_limit
+def api_detection_stats():
+    """Return real-time detection engine statistics."""
+    try:
+        from integration.detection_engine import DetectionEngine, PerIPState
+        from integration.config import DATA_DIR
+
+        anomalies = _load_jsonl(ANOMALIES_FILE)
+        live_anomalies = [a for a in anomalies if a.get("detection_mode") == "live"]
+
+        # Count by type
+        by_type = {}
+        by_severity = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+        for a in live_anomalies:
+            t = a.get("anomaly_type", "Unknown")
+            by_type[t] = by_type.get(t, 0) + 1
+            s = str(a.get("severity", "MEDIUM")).upper()
+            if s in by_severity:
+                by_severity[s] += 1
+
+        return jsonify({
+            "status": "active",
+            "total_anomalies": len(live_anomalies),
+            "by_type": by_type,
+            "by_severity": by_severity,
+            "latest_anomaly": live_anomalies[-1] if live_anomalies else None,
+            "server_time": datetime.now(UTC).isoformat() + "Z",
+        })
+    except Exception as exc:
+        return jsonify({"status": "error", "error": str(exc)}), 500
+
+
+@app.route("/api/detection/stream")
+def api_detection_stream():
+    """SSE stream for real-time anomaly feed."""
+    def generate():
+        last_count = 0
+        while True:
+            try:
+                rows = _load_jsonl(ANOMALIES_FILE)
+                live_rows = [r for r in rows if r.get("detection_mode") == "live"]
+                if len(live_rows) > last_count:
+                    for row in live_rows[last_count:]:
+                        data = json.dumps(row)
+                        yield f"data: {data}\n\n"
+                    last_count = len(live_rows)
+            except Exception:
+                pass
+            time.sleep(2)
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/api/detection/blocklist")
+@api_rate_limit
+def api_blocklist():
+    """Return the current IP blocklist."""
+    blocklist_path = DATA_DIR / "blocklist.json"
+    if blocklist_path.exists():
+        with open(blocklist_path, encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+    else:
+        data = []
+    return jsonify({"blocked_ips": data, "count": len(data)})
+
+
+@app.route("/api/detection/rules")
+@api_rate_limit
+def api_detection_rules():
+    """Generate firewall rules from current anomalies."""
+    try:
+        from jsonl_to_iptables import load_anomalies, extract_blocked_ips, generate_iptables_rules
+        anomalies = load_anomalies(ANOMALIES_FILE)
+        ip_data = extract_blocked_ips(anomalies)
+        rules = generate_iptables_rules(ip_data)
+        return jsonify({
+            "rules": rules,
+            "ip_count": len(ip_data),
+            "anomaly_count": len(anomalies),
+        })
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
 # ── API: Keep-Alive Ping ───────────────────────────────────
 @app.route("/api/keepalive")
 def api_keepalive():

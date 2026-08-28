@@ -25,7 +25,7 @@ import time
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -293,6 +293,7 @@ class LiveProcessor:
         anomalies_file: str = str(ANOMALIES_FILE),
         detection_interval: int = 5,
         buffer_window: int = 60,
+        auto_block: bool = False,
     ):
         self.packets_file = Path(packets_file)
         self.anomalies_file = Path(anomalies_file)
@@ -316,6 +317,8 @@ class LiveProcessor:
         self._running = False
         self._detection_thread: Optional[threading.Thread] = None
         self._anomaly_count = 0
+        self.auto_block = auto_block
+        self._blocked_ips: Set[str] = set()
 
         # Ensure output directories exist
         self.packets_file.parent.mkdir(parents=True, exist_ok=True)
@@ -347,12 +350,16 @@ class LiveProcessor:
                         src = a["src_ip"]
                         mitre_id = a.get("mitre", {}).get("technique_id", "?")
                         logger.warning(
-                            f"⚠ [{sev}] {atype} from {src} "
+                            f"[{sev}] {atype} from {src} "
                             f"(confidence: {a['confidence']:.2f}, MITRE: {mitre_id})"
                         )
                         # Log prevention steps
                         for rec in a.get("prevention", [])[:2]:
-                            logger.info(f"  → {rec}")
+                            logger.info(f"  -> {rec}")
+
+                        # Auto-block: apply firewall rule for CRITICAL/HIGH
+                        if self.auto_block and sev in ("CRITICAL", "HIGH"):
+                            self._auto_block_ip(src, a)
 
                 # Periodic stats
                 cycle += 1
@@ -403,6 +410,24 @@ class LiveProcessor:
         self._detection_thread.start()
         logger.info("Live detection engine started")
 
+    def _auto_block_ip(self, src_ip: str, anomaly: Dict):
+        """Apply firewall rule to block an attacker IP."""
+        if src_ip in self._blocked_ips:
+            logger.info(f"  [AUTO-BLOCK] {src_ip} already blocked, skipping")
+            return
+
+        try:
+            from integration.prevention import PreventionEngine
+            engine = PreventionEngine()
+            applied = engine.auto_block(anomaly)
+            if applied:
+                self._blocked_ips.add(src_ip)
+                logger.warning(f"  [AUTO-BLOCK] Successfully blocked {src_ip}")
+            else:
+                logger.warning(f"  [AUTO-BLOCK] Failed to block {src_ip} (rule generated but not applied)")
+        except Exception as e:
+            logger.error(f"  [AUTO-BLOCK] Error blocking {src_ip}: {e}")
+
     def stop(self):
         """Stop live processing."""
         self._running = False
@@ -414,7 +439,8 @@ class LiveProcessor:
         logger.info(
             f"Live processor stopped. "
             f"Packets: {self.capturer.packet_count}, "
-            f"Anomalies: {self._anomaly_count}"
+            f"Anomalies: {self._anomaly_count}, "
+            f"Blocked IPs: {len(self._blocked_ips)}"
         )
 
     @property
@@ -428,6 +454,8 @@ class LiveProcessor:
             "buffer_size": self.buffer.total_packets,
             "tracked_ips": engine_stats["tracked_ips"],
             "per_ip_stats": engine_stats["per_ip_stats"],
+            "auto_block": self.auto_block,
+            "blocked_ips": list(self._blocked_ips),
         }
 
 
@@ -461,6 +489,8 @@ Examples:
     )
     parser.add_argument("--packets-file", default=str(PACKETS_FILE), help="Packets output file")
     parser.add_argument("--anomalies-file", default=str(ANOMALIES_FILE), help="Anomalies output file")
+    parser.add_argument("--auto-block", action="store_true",
+                        help="Auto-block attacker IPs via firewall rules")
 
     args = parser.parse_args()
 
@@ -475,6 +505,7 @@ Examples:
         packets_file=args.packets_file,
         anomalies_file=args.anomalies_file,
         detection_interval=args.interval,
+        auto_block=args.auto_block,
     )
 
     try:
@@ -495,6 +526,7 @@ Examples:
     print(f"  Anomalies found:   {stats['anomalies_detected']}")
     print(f"  Packets file:      {processor.packets_file}")
     print(f"  Anomalies file:    {processor.anomalies_file}")
+    print(f"  Auto-blocked IPs:  {len(stats.get('blocked_ips', []))}")
     print(f"{'='*60}\n")
 
 

@@ -1,55 +1,5 @@
 /* NetWatch — SIH26153 Dashboard Styles (Light Purple Theme) */
 
-/* ── Custom cursor ─────────────────────────────────────── */
-#cursor-dot,
-#cursor-ring,
-#cursor-glow {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-body.cursor-active #cursor-dot,
-body.cursor-active #cursor-ring,
-body.cursor-active #cursor-glow {
-  opacity: 1;
-}
-@media (pointer: fine) and (hover: hover) {
-  body.cursor-active a,
-  body.cursor-active button,
-  body.cursor-active [role="button"] { cursor: none !important; }
-}
-
-#cursor-dot {
-  animation: cursorPulse 2s ease-in-out infinite;
-}
-#cursor-ring {
-  animation: ringPulse 2s ease-in-out infinite;
-}
-
-@keyframes cursorPulse {
-  0%, 100% { box-shadow: 0 0 6px rgba(124,58,237,0.4); }
-  50%      { box-shadow: 0 0 18px rgba(124,58,237,0.8); }
-}
-@keyframes ringPulse {
-  0%, 100% { opacity: 0.5; }
-  50%      { opacity: 0.9; }
-}
-
-/* Cursor trail sparkle */
-.cursor-trail {
-  position: fixed;
-  width: 4px;
-  height: 4px;
-  background: rgba(124,58,237,0.7);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9996;
-  animation: trailFade 0.5s ease-out forwards;
-}
-@keyframes trailFade {
-  0%   { opacity: 1; transform: translate(-50%,-50%) scale(1.5); }
-  100% { opacity: 0; transform: translate(-50%,-50%) scale(0); }
-}
-
 /* ── Body background subtle mesh ────────────────────────── */
 body::before {
   content: '';

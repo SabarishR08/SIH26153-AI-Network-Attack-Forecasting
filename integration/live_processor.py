@@ -1,18 +1,14 @@
 """
-SIH26153 — Live Packet Processor
+SIH26153 -- Live Packet Processor
 
 Continuously captures real packets and runs anomaly detection on them.
 This replaces the synthetic data generator with a real IDS engine.
 
-Usage:
-    # Start live monitoring (requires root)
-    sudo python -m integration.live_processor
+Requires admin/root privileges for packet capture.
+On Windows, run as Administrator or use: python run.py --monitor
+On Linux/macOS, use: sudo python -m integration.live_processor
 
-    # Monitor for 120 seconds
-    sudo python -m integration.live_processor --timeout 120
-
-    # Monitor specific interface with BPF filter
-    sudo python -m integration.live_processor --interface eth0 --filter "tcp"
+Note: On Windows, install Npcap first: https://npcap.com/#download
 """
 
 import argparse
@@ -467,17 +463,23 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Start live IDS (requires root/admin)
+  # Windows (run as Administrator):
+  python -m integration.live_processor
+  python run.py --monitor
+
+  # Linux/macOS:
   sudo python -m integration.live_processor
 
-  # Monitor for 120 seconds
-  sudo python -m integration.live_processor --timeout 120
+  # Monitor for 120 seconds:
+  python -m integration.live_processor --timeout 120
 
-  # Detect only TCP port scans
-  sudo python -m integration.live_processor --filter "tcp"
+  # Detect only TCP port scans:
+  python -m integration.live_processor --filter "tcp"
 
-  # Monitor specific interface
-  sudo python -m integration.live_processor --interface eth0
+  # Monitor specific interface:
+  python -m integration.live_processor --interface eth0
+
+Note: On Windows, install Npcap first: https://npcap.com/#download
         """,
     )
     parser.add_argument("--interface", "-i", default=None, help="Network interface")

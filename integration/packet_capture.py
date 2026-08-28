@@ -4,21 +4,26 @@ SIH26153 — Real-Time Packet Capture Module
 Captures live network traffic using scapy in promiscuous mode and converts
 packets into the JSONL format expected by the anomaly detection pipeline.
 
+Requires admin/root privileges for promiscuous capture.
+
 Usage:
-    # Capture on default interface
+    # Windows (run as Administrator, or the script will auto-elevate):
     python -m integration.packet_capture
+    python -m integration.packet_capture --interface "Ethernet" --timeout 60
 
-    # Capture on specific interface for 60 seconds
-    python -m integration.packet_capture --interface eth0 --timeout 60
+    # Linux/macOS:
+    sudo python -m integration.packet_capture
+    sudo python -m integration.packet_capture --interface eth0 --timeout 60
 
-    # Capture and write to specific file
-    python -m integration.packet_capture --output data/live_packets.jsonl
+Note: On Windows, install Npcap first: https://npcap.com/#download
 """
 
 import argparse
 import json
 import logging
 import os
+import platform
+import subprocess
 import sys
 import threading
 import time
@@ -31,6 +36,8 @@ logger = logging.getLogger(__name__)
 # ── TCP flag mapping (scapy hex → string) ─────────────────
 # Scapy uses bitmask integers for flags; we map to the string
 # format the existing anomaly detector expects.
+# Note: _tcp_flags_to_string() below uses bitwise ops, so this dict
+# is only used for quick lookups of common single-flag values.
 TCP_FLAG_MAP = {
     0x01: "F",      # FIN
     0x02: "S",      # SYN
@@ -41,7 +48,6 @@ TCP_FLAG_MAP = {
     0x12: "SA",     # SYN+ACK
     0x14: "RA",     # RST+ACK
     0x18: "PA",     # PSH+ACK
-    0x10: "A",      # ACK (solo)
 }
 
 
@@ -221,19 +227,36 @@ class PacketCapturer:
             logger.warning("Capture already running")
             return
 
-        from scapy.all import (
-            Sniffer,
-            conf,
-            get_if_list,
-        )
+        from scapy.all import conf, get_if_list
+        try:
+            from scapy.sendrecv import AsyncSniffer as Sniffer
+        except ImportError:
+            from scapy.all import Sniffer
 
         # Auto-detect interface if not specified
         iface = self.interface
         if not iface:
+            # Try to find the interface that has our local IP
+            try:
+                from scapy.arch.windows import get_windows_if_list
+                local_ip = get_local_ip()
+                win_ifaces = get_windows_if_list()
+                for wif in win_ifaces:
+                    if local_ip in (wif.get('ips') or []):
+                        # Found it — build the NPF device name from the GUID
+                        guid = wif.get('guid', '')
+                        if guid:
+                            iface = f"\\Device\\NPF_{guid}"
+                            logger.info(f"Auto-selected interface: {wif.get('name', iface)} ({iface})")
+                            break
+            except Exception as e:
+                logger.debug(f"Could not auto-detect by IP: {e}")
+
+        if not iface:
             interfaces = get_if_list()
             if interfaces:
                 iface = interfaces[0]
-                logger.info(f"Auto-selected interface: {iface}")
+                logger.info(f"Auto-selected interface (fallback): {iface}")
             else:
                 logger.error("No network interfaces found")
                 raise RuntimeError("No network interfaces available")
@@ -254,7 +277,6 @@ class PacketCapturer:
                 timeout=timeout,
                 count=count or 0,
                 store=False,
-                promisc=True,
             )
             self._capture.start()
             logger.info(
@@ -264,10 +286,17 @@ class PacketCapturer:
         except PermissionError:
             self._running = False
             self._close_output()
-            raise PermissionError(
-                "Packet capture requires root/admin privileges. "
-                "Run with: sudo python -m integration.packet_capture"
-            )
+            if platform.system() == "Windows":
+                raise PermissionError(
+                    "Packet capture requires admin privileges on Windows. "
+                    "Please right-click your terminal and 'Run as administrator', "
+                    "or run: python -m integration.packet_capture --auto-elevate"
+                )
+            else:
+                raise PermissionError(
+                    "Packet capture requires root/admin privileges. "
+                    "Run with: sudo python -m integration.packet_capture"
+                )
         except Exception as e:
             self._running = False
             self._close_output()
@@ -360,26 +389,112 @@ def get_default_interface() -> Optional[str]:
         return None
 
 
-# ── CLI Entry Point ────────────────────────────────────────
+# ── Windows Admin Elevation ───────────────────────────────
+
+def is_windows_admin() -> bool:
+    """Check if running with admin privileges on Windows."""
+    if platform.system() != "Windows":
+        return os.geteuid() == 0  # type: ignore[attr-defined]
+    try:
+        import ctypes
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except Exception:
+        return False
+
+
+def request_windows_elevation():
+    """Re-launch the current script as admin on Windows via UAC."""
+    script = sys.executable
+    args = " ".join(sys.argv)
+    logger.info("Requesting admin elevation via UAC...")
+    try:
+        import ctypes
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", script, args, None, 1
+        )
+    except Exception as e:
+        print(f"Failed to elevate: {e}")
+        print("Please right-click your terminal and 'Run as administrator'.")
+        sys.exit(1)
+    sys.exit(0)
+
+
+def _run_main_logic(args):
+    """Core logic extracted from main() for reuse after elevation."""
+    if args.list_interfaces:
+        interfaces = list_interfaces()
+        default_iface = get_default_interface()
+        local_ip = get_local_ip()
+
+        print(f"\nLocal IP: {local_ip}")
+        print(f"Default interface: {default_iface}\n")
+        print("Available interfaces:")
+        for iface in interfaces:
+            marker = " (default)" if iface == default_iface else ""
+            print(f"  - {iface}{marker}")
+        print()
+        return
+
+    local_ip = get_local_ip()
+    print(f"\n{'='*60}")
+    print(f"  SIH26153 -- Real-Time Packet Capture")
+    print(f"{'='*60}")
+    print(f"  Local IP:   {local_ip}")
+    print(f"  Interface:  {args.interface or '(auto-detect)'}")
+    print(f"  Output:     {args.output}")
+    print(f"  Filter:     {args.filter or '(none)'}")
+    print(f"  Timeout:    {args.timeout or '(Ctrl+C to stop)'}")
+    print(f"{'='*60}\n")
+
+    capturer = PacketCapturer(
+        interface=args.interface,
+        output_file=args.output,
+        bpf_filter=args.filter,
+    )
+
+    try:
+        capturer.start(timeout=args.timeout, count=args.count)
+
+        # Wait for capture to finish (timeout or Ctrl+C)
+        if capturer._capture:
+            capturer._capture.join()
+
+    except KeyboardInterrupt:
+        print("\n\nStopping capture...")
+    finally:
+        capturer.stop()
+
+    print(f"\nCapture complete: {capturer.packet_count} packets captured")
+    print(f"Saved to: {capturer.output_file}\n")
+
 
 def main():
     """CLI interface for packet capture."""
+    if platform.system() == "Windows" and not is_windows_admin():
+        print("Admin privileges required for packet capture on Windows.")
+        print("Requesting elevation...")
+        request_windows_elevation()
+
     parser = argparse.ArgumentParser(
-        description="SIH26153 — Real-Time Packet Capture",
+        description="SIH26153 -- Real-Time Packet Capture",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Capture on default interface (requires root)
-  sudo python -m integration.packet_capture
+  # Windows (auto-elevates if needed):
+  python -m integration.packet_capture
+  python -m integration.packet_capture --timeout 60
 
-  # Capture for 60 seconds
+  # Linux/macOS:
+  sudo python -m integration.packet_capture
   sudo python -m integration.packet_capture --timeout 60
 
-  # Capture only TCP traffic on port 80
-  sudo python -m integration.packet_capture --filter "tcp port 80"
+  # Capture only TCP traffic on port 80:
+  python -m integration.packet_capture --filter "tcp port 80"
 
-  # List available interfaces
+  # List available interfaces:
   python -m integration.packet_capture --list-interfaces
+
+Note: On Windows, install Npcap first: https://npcap.com/#download
         """,
     )
     parser.add_argument(
@@ -423,51 +538,7 @@ Examples:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
-    if args.list_interfaces:
-        interfaces = list_interfaces()
-        default_iface = get_default_interface()
-        local_ip = get_local_ip()
-
-        print(f"\nLocal IP: {local_ip}")
-        print(f"Default interface: {default_iface}\n")
-        print("Available interfaces:")
-        for iface in interfaces:
-            marker = " ← default" if iface == default_iface else ""
-            print(f"  - {iface}{marker}")
-        print()
-        return
-
-    local_ip = get_local_ip()
-    print(f"\n{'='*60}")
-    print(f"  SIH26153 — Real-Time Packet Capture")
-    print(f"{'='*60}")
-    print(f"  Local IP:   {local_ip}")
-    print(f"  Interface:  {args.interface or '(auto-detect)'}")
-    print(f"  Output:     {args.output}")
-    print(f"  Filter:     {args.filter or '(none)'}")
-    print(f"  Timeout:    {args.timeout or '(Ctrl+C to stop)'}")
-    print(f"{'='*60}\n")
-
-    capturer = PacketCapturer(
-        interface=args.interface,
-        output_file=args.output,
-        bpf_filter=args.filter,
-    )
-
-    try:
-        capturer.start(timeout=args.timeout, count=args.count)
-
-        # Wait for capture to finish (timeout or Ctrl+C)
-        if capturer._capture:
-            capturer._capture.join()
-
-    except KeyboardInterrupt:
-        print("\n\nStopping capture...")
-    finally:
-        capturer.stop()
-
-    print(f"\nCapture complete: {capturer.packet_count} packets captured")
-    print(f"Saved to: {capturer.output_file}\n")
+    _run_main_logic(args)
 
 
 if __name__ == "__main__":

@@ -104,11 +104,20 @@ def step_live_capture(
             "interface": interface or "auto",
         }
     except PermissionError:
-        logger.error(
-            "Live capture requires root/admin privileges. "
-            "Run with: sudo python run.py --live"
-        )
-        return {"status": "error", "error": "Permission denied — run as root/admin"}
+        import platform as _platform
+        if _platform.system() == "Windows":
+            msg = (
+                "Live capture requires admin privileges on Windows. "
+                "Right-click terminal -> Run as administrator, "
+                "or run: python run.py --live (auto-elevates)"
+            )
+        else:
+            msg = (
+                "Live capture requires root/admin privileges. "
+                "Run with: sudo python run.py --live"
+            )
+        logger.error(msg)
+        return {"status": "error", "error": msg}
     except Exception as exc:
         logger.error(f"Live capture failed: {exc}")
         return {"status": "error", "error": str(exc)}

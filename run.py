@@ -15,29 +15,34 @@ Usage:
     python run.py --reuse-data
 
     # Live mode: capture real traffic for 30s, then run pipeline + dashboard
-    sudo python run.py --live
+    # Windows: auto-elevates to admin via UAC prompt
+    # Linux/macOS: requires sudo
+    python run.py --live
 
     # Live mode: capture for 120 seconds
-    sudo python run.py --live --live-duration 120
+    python run.py --live --live-duration 120
 
     # Live mode: capture on specific interface with BPF filter
-    sudo python run.py --live --live-interface eth0 --live-filter "tcp"
+    python run.py --live --live-interface eth0 --live-filter "tcp"
 
     # Continuous monitoring: run forever, detect intrusions in real-time
-    sudo python run.py --monitor
+    python run.py --monitor
 
-Environment variables (copy .env.example → .env and fill in):
+Environment variables (copy .env.example -> .env and fill in):
     PORT                        Flask port (default 5000)
     FLASK_DEBUG                 Set to 1 for debug/hot-reload
     ENABLE_FORECASTING_MODEL    Set to 0 to disable Model B
     ENABLE_KILLCHAIN            Set to 0 to disable kill chain enrichment
     FLASK_SECRET_KEY            Change in production
+
+Note: On Windows, install Npcap first: https://npcap.com/#download
 """
 
 import argparse
 import json
 import logging
 import os
+import platform
 import sys
 from pathlib import Path
 
@@ -70,6 +75,40 @@ setup_logging()
 logger = get_logger("run")
 
 
+def is_windows_admin() -> bool:
+    """Check if running with admin privileges on Windows."""
+    if platform.system() != "Windows":
+        try:
+            return os.geteuid() == 0
+        except AttributeError:
+            return False
+    try:
+        import ctypes
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except Exception:
+        return False
+
+
+def request_windows_elevation():
+    """Re-launch the current script as admin on Windows via UAC."""
+    import ctypes
+    script = os.path.abspath(sys.argv[0])
+    # Quote the script path in case it has spaces
+    params = f'"{script}"'
+    if len(sys.argv) > 1:
+        params += " " + " ".join(sys.argv[1:])
+    print("Requesting admin elevation via UAC...")
+    try:
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, params, None, 1
+        )
+    except Exception as e:
+        print(f"Failed to elevate: {e}")
+        print("Please right-click your terminal and 'Run as administrator'.")
+        sys.exit(1)
+    sys.exit(0)
+
+
 def run_pipeline(
     reuse_data: bool = False,
     live_mode: bool = False,
@@ -77,7 +116,7 @@ def run_pipeline(
     live_interface=None,
     live_filter=None,
 ):
-    logger.info("Starting SIH26153 pipeline…")
+    logger.info("Starting SIH26153 pipeline...")
     from integration.pipeline_runner import run_full_pipeline
     result = run_full_pipeline(
         use_existing_packets=reuse_data,
@@ -100,7 +139,7 @@ def start_server():
 
 def main():
     parser = argparse.ArgumentParser(
-        description="SIH26153 — AI-Based Network Attack Forecasting"
+        description="SIH26153 -- AI-Based Network Attack Forecasting"
     )
     parser.add_argument(
         "--pipeline-only", action="store_true",
@@ -116,7 +155,7 @@ def main():
     )
     parser.add_argument(
         "--live", action="store_true",
-        help="Capture real network traffic instead of generating synthetic data (requires root/admin)"
+        help="Capture real network traffic (auto-elevates on Windows, needs sudo on Linux/macOS)"
     )
     parser.add_argument(
         "--live-duration", type=int, default=30,
@@ -139,6 +178,11 @@ def main():
         help="Automatically apply firewall rules to block detected attackers"
     )
     args = parser.parse_args()
+
+    # Auto-elevate on Windows if live or monitor mode needs admin
+    if platform.system() == "Windows" and (args.live or args.monitor):
+        if not is_windows_admin():
+            request_windows_elevation()
 
     # Continuous monitoring mode — runs forever until Ctrl+C
     if args.monitor:

@@ -1,0 +1,28 @@
+name: Keep Render Awake
+
+on:
+  schedule:
+    # Every 5 minutes (Render sleeps after 15 min idle)
+    - cron: '*/5 * * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API
+        run: |
+          # Set your Render URL here after deployment
+          RENDER_URL="${{ secrets.RENDER_URL }}"
+          if [ -z "$RENDER_URL" ]; then
+            RENDER_URL="https://netwatch-sih26153-api.onrender.com"
+          fi
+
+          echo "Pinging $RENDER_URL/api/keepalive ..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$RENDER_URL/api/keepalive")
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Service is alive (HTTP $HTTP_CODE)"
+          else
+            echo "⚠️ Service returned HTTP $HTTP_CODE"
+          fi

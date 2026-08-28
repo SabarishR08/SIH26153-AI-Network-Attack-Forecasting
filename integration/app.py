@@ -42,9 +42,30 @@ app = Flask(
     static_folder=str(Path(__file__).parent / "static"),
 )
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "sih26153-dev-key-change-in-prod")
+app.config["START_TIME"] = time.time()
 init_rate_limiting(app)
 setup_logging()
 create_request_middleware(app)
+
+# ── Keep-Alive self-pinger (background thread) ─────────────
+if os.getenv("KEEP_AWAKE", "0") == "1":
+    import threading
+
+    def _keep_alive_loop():
+        """Ping self every 5 minutes to prevent Render free-tier spin-down."""
+        import urllib.request
+
+        while True:
+            time.sleep(300)  # 5 minutes
+            try:
+                port = os.getenv("PORT", "5000")
+                url = f"http://127.0.0.1:{port}/api/keepalive"
+                urllib.request.urlopen(url, timeout=10)
+            except Exception:
+                pass  # ignore self-ping errors
+
+    _thread = threading.Thread(target=_keep_alive_loop, daemon=True)
+    _thread.start()
 
 
 # ── Helpers ────────────────────────────────────────────────
@@ -334,6 +355,14 @@ def api_stream():
             "X-Accel-Buffering": "no",
         },
     )
+# ── API: Keep-Alive Ping ───────────────────────────────────
+@app.route("/api/keepalive")
+def api_keepalive():
+    """Lightweight endpoint for uptime monitors / cron jobs.
+    Keeps Render free-tier service awake."""
+    return jsonify({"status": "alive", "uptime": time.time() - app.config.get("START_TIME", time.time())})
+
+
 # ── API Documentation ───────────────────────────────────────
 
 OPENAPI_SPEC_PATH = PROJECT_ROOT / "docs" / "openapi.yaml"

@@ -232,6 +232,30 @@ paths:
                 type: string
                 description: SSE-formatted anomaly events
 
+  /api/keepalive:
+    get:
+      tags: [System]
+      summary: Keep-alive ping
+      description: |
+        Lightweight health check endpoint for uptime monitors and cron jobs.
+        Keeps Render free-tier services from sleeping due to inactivity.
+      operationId: keepAlive
+      responses:
+        "200":
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: alive
+                  uptime:
+                    type: number
+                    description: Seconds since server started
+                    example: 3600.5
+
 components:
   schemas:
     DashboardResponse:

@@ -29,6 +29,8 @@ services:
         value: "json"
       - key: LOG_DISABLE_FILE
         value: "1"
+      - key: KEEP_AWAKE
+        value: "1"
       - key: PYTHON_VERSION
         value: "3.12.0"
 

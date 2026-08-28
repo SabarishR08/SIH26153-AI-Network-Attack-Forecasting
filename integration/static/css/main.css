@@ -1,5 +1,42 @@
 /* NetWatch — SIH26153 Dashboard Styles (Light Purple Theme) */
 
+/* ── Custom cursor ─────────────────────────────────────── */
+@media (pointer: fine) {
+  *, *::before, *::after { cursor: none !important; }
+}
+
+#cursor-dot {
+  animation: cursorPulse 2s ease-in-out infinite;
+}
+#cursor-ring {
+  animation: ringPulse 2s ease-in-out infinite;
+}
+
+@keyframes cursorPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(124,58,237,0.4); }
+  50%      { box-shadow: 0 0 14px rgba(124,58,237,0.7); }
+}
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+/* Cursor trail shimmer — small sparkle that follows */
+.cursor-trail {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  background: rgba(124,58,237,0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9996;
+  animation: trailFade 0.6s ease-out forwards;
+}
+@keyframes trailFade {
+  0%   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(0.2); }
+}
+
 /* ── Body background subtle mesh ────────────────────────── */
 body::before {
   content: '';

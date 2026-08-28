@@ -12,11 +12,11 @@
       theme: {
         extend: {
           colors: {
-            surface:  '#faf7f2',
+            surface:  '#f5f3ff',
             card:     'rgba(255, 255, 255, 0.7)',
-            border:   'rgba(214, 204, 189, 0.7)',
-            accent:   '#16a34a',
-            muted:    '#78716c',
+            border:   'rgba(196, 181, 253, 0.7)',
+            accent:   '#7c3aed',
+            muted:    '#6b7280',
             critical: '#dc2626',
             high:     '#d97706',
             medium:   '#2563eb',
@@ -38,17 +38,17 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
 </head>
 
-<body class="bg-surface text-stone-800 font-sans min-h-screen flex flex-col antialiased" style="background: linear-gradient(135deg, #faf7f2 0%, #f5f0e8 40%, #faf7f2 100%); background-attachment: fixed;">
+<body class="bg-surface text-stone-800 font-sans min-h-screen flex flex-col antialiased" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 40%, #f5f3ff 100%); background-attachment: fixed;">
 
   <!-- ── Top nav ─────────────────────────────────────────── -->
-  <header class="border-b px-6 py-3 flex items-center justify-between sticky top-0 z-50" style="background: rgba(255,255,255,0.8); border-color: rgba(214,204,189,0.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+  <header class="border-b px-6 py-3 flex items-center justify-between sticky top-0 z-50" style="background: rgba(255,255,255,0.8); border-color: rgba(196,181,253,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
     <div class="flex items-center gap-3">
       <!-- pulse dot -->
       <span class="relative flex h-2.5 w-2.5">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-low opacity-75"></span>
         <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-low"></span>
       </span>
-      <a href="/" class="text-stone-900 font-bold tracking-tight text-sm">NetWatch</a>
+      <a href="/" class="font-bold tracking-tight text-sm" style="color:#4c1d95">NetWatch</a>
       <span class="text-muted text-xs px-2 py-0.5 rounded border border-border">SIH-26153</span>
     </div>
 
@@ -76,7 +76,7 @@
     <div class="flex items-start gap-3">
       <span id="toast-icon" class="mt-0.5 text-medium">⏳</span>
       <div>
-        <p id="toast-title" class="font-medium text-stone-900">Running pipeline…</p>
+        <p id="toast-title" class="font-medium text-gray-900">Running pipeline…</p>
         <p id="toast-body" class="text-muted text-xs mt-0.5">This may take 15–30 seconds.</p>
       </div>
       <button onclick="document.getElementById('pipeline-toast').classList.add('hidden')"

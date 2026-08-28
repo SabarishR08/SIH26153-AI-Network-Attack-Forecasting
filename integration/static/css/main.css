@@ -275,4 +275,12 @@ tbody tr:hover {
 .glow-purple { box-shadow: 0 0 12px rgba(124,58,237,0.12); }
 
 /* ── Text color helpers ─────────────────────────────────── */
-.text-white { color: #1e1b4b !important; }
+.text-white { color: #000000 !important; }
+
+/* ── Bold black text global ────────────────────────────── */
+body { color: #000000; font-weight: 500; }
+h1, h2, h3, h4, h5, h6 { color: #000000; font-weight: 700; }
+.stat-value { color: #000000; font-weight: 700; }
+.stat-label { color: #1a1a1a; font-weight: 600; }
+.nav-link { color: #333333; font-weight: 600; }
+.nav-active { color: #000000 !important; font-weight: 700; }

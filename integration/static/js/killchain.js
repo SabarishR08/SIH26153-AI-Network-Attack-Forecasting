@@ -52,14 +52,14 @@ function renderIncidents(incidents) {
     priorityEl.className  += ` priority-${priority} px-2 py-0.5 rounded-full text-xs font-semibold`;
 
     el.querySelector('.incident-pattern').textContent     = inc.pattern || 'Unknown Pattern';
-    el.querySelector('.incident-entity').textContent      = inc.entity  || '—';
+    el.querySelector('.incident-entity').textContent      = inc.entity || inc.src_ip || '—';
     el.querySelector('.incident-stage').textContent       = inc.kill_chain_stage || '—';
-    el.querySelector('.incident-events').textContent      = inc.event_count || inc.events?.length || '—';
+    el.querySelector('.incident-events').textContent      = inc.event_count || inc.confidence ? Math.round(inc.confidence * 100) + '%' : inc.events?.length || '—';
     el.querySelector('.incident-score').textContent       = score;
-    el.querySelector('.incident-technique-id').textContent   = mitre.technique_id   || 'N/A';
-    el.querySelector('.incident-technique-name').textContent = mitre.technique_name  || '—';
-    el.querySelector('.incident-tactic').textContent         = mitre.tactic          || '—';
-    el.querySelector('.incident-description').textContent    = mitre.description     || '';
+    el.querySelector('.incident-technique-id').textContent   = mitre.technique_id || mitre.id   || 'N/A';
+    el.querySelector('.incident-technique-name').textContent = mitre.technique_name || mitre.name || '—';
+    el.querySelector('.incident-tactic').textContent         = mitre.tactic        || mitre.tactic || '—';
+    el.querySelector('.incident-description').textContent    = mitre.description   || '';
 
     list.appendChild(card);
   }
@@ -72,10 +72,10 @@ function renderMitreCoverage(incidents) {
 
   for (const inc of (incidents || [])) {
     const m = inc.mitre || {};
-    const id = m.technique_id;
+    const id = m.technique_id || m.id;
     if (id && id !== 'UNKNOWN' && !seen.has(id)) {
       seen.add(id);
-      chips.push({ id, name: m.technique_name || '', tactic: m.tactic || '' });
+      chips.push({ id, name: m.technique_name || m.name || '', tactic: m.tactic || '' });
     }
   }
 

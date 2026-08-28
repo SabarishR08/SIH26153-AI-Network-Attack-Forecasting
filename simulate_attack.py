@@ -24,8 +24,8 @@ DATA_DIR.mkdir(exist_ok=True)
 
 PACKETS_FILE = DATA_DIR / "packets.jsonl"
 ANOMALIES_FILE = DATA_DIR / "anomalies.jsonl"
-FEATURES_FILE = DATA_DIR / "features.jsonl"
-KILLCHAIN_FILE = DATA_DIR / "killchain_incidents.json"
+FEATURES_FILE = DATA_DIR / "forecast_features.jsonl"
+KILLCHAIN_FILE = DATA_DIR / "killchain_incidents.jsonl"
 
 # ── Realistic IPs ──────────────────────────────────────────
 ATTACKER_IPS = [
@@ -106,7 +106,7 @@ def generate_packets(n=500):
             "protocol": protocol,
             "flags": flags,
             "payload_size": payload_size,
-            "timestamp": gen_timestamp(now - (n - i) * 0.5),
+            "timestamp": gen_timestamp((n - i) * 0.5),
         })
 
     return packets
@@ -301,8 +301,7 @@ def main():
     # Step 4: Kill chain
     print(f"\nBuilding kill chain incidents...")
     incidents = generate_killchain(anomalies)
-    with open(KILLCHAIN_FILE, "w", encoding="utf-8") as f:
-        json.dump(incidents, f, indent=2)
+    save_jsonl(incidents, KILLCHAIN_FILE)
     stages = {}
     for inc in incidents:
         s = inc["kill_chain_stage"]

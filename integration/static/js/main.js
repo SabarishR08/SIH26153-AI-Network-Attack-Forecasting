@@ -16,6 +16,7 @@ function fmtTime(iso) {
   if (!iso) return '—';
   try {
     const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
     return d.toLocaleString('en-IN', { hour12: false,
       month: 'short', day: '2-digit',
       hour: '2-digit', minute: '2-digit', second: '2-digit' });

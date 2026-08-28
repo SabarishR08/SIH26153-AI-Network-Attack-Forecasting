@@ -71,16 +71,30 @@ if os.getenv("KEEP_AWAKE", "0") == "1":
 # ── Helpers ────────────────────────────────────────────────
 
 def _load_jsonl(path: Path) -> list:
+    """Load a JSONL file (one JSON object per line) or a JSON array file."""
     rows = []
     if path.exists():
         with open(path, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    try:
-                        rows.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        continue
+            content = f.read().strip()
+        if not content:
+            return rows
+        # Try parsing as a JSON array first
+        try:
+            parsed = json.loads(content)
+            if isinstance(parsed, list):
+                return parsed
+            elif isinstance(parsed, dict):
+                return [parsed]
+        except json.JSONDecodeError:
+            pass
+        # Fall back to JSONL (one JSON object per line)
+        for line in content.splitlines():
+            line = line.strip()
+            if line:
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
     return rows
 
 
@@ -137,7 +151,7 @@ def api_dashboard():
     packets   = _load_jsonl(PACKETS_FILE)
     anomalies = _load_jsonl(ANOMALIES_FILE)
     features  = _load_jsonl(FEATURES_FILE)
-    incidents = _load_json(KILLCHAIN_INCIDENTS_FILE)
+    incidents = _load_jsonl(KILLCHAIN_INCIDENTS_FILE)
     metrics   = _read_model_metrics()
 
     # Traffic
@@ -169,7 +183,8 @@ def api_dashboard():
     mitre_set: set = set()
     stages: dict = {}
     for inc in incidents:
-        tid = (inc.get("mitre") or {}).get("technique_id", "")
+        m = inc.get("mitre") or {}
+        tid = m.get("technique_id") or m.get("id", "")
         if tid and tid != "UNKNOWN":
             mitre_set.add(tid)
         stage = inc.get("kill_chain_stage", "Unknown")
@@ -255,7 +270,7 @@ def api_forecast():
 @app.route("/api/incidents")
 @api_rate_limit
 def api_incidents():
-    return jsonify(_load_json(KILLCHAIN_INCIDENTS_FILE))
+    return jsonify(_load_jsonl(KILLCHAIN_INCIDENTS_FILE))
 
 
 @app.route("/api/packets")

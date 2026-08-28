@@ -184,7 +184,10 @@ function formatTime(ts) {
     if (!ts) return '—';
     try {
         const date = new Date(ts);
-        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        if (isNaN(date.getTime())) return ts;
+        return date.toLocaleString('en-IN', { hour12: false,
+            month: 'short', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch {
         return ts;
     }

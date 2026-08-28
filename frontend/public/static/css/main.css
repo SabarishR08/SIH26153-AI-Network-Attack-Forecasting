@@ -11,12 +11,13 @@ body {
     background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 40%, #f5f3ff 100%);
     background-attachment: fixed;
     color: #000000;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.5;
     min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 { color: #000000; font-weight: 700; }
+h1, h2, h3, h4, h5, h6 { color: #000000; font-weight: 800; }
+strong, b { color: #000000; }
 
 /* Gradient mesh overlay */
 body::before {
@@ -36,10 +37,10 @@ body::before {
 .nav-link {
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
-    color: #333333;
+    color: #000000;
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .nav-link:hover {
@@ -85,15 +86,15 @@ body::before {
 
 .stat-label {
     font-size: 0.7rem;
-    color: #1a1a1a;
+    color: #000000;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .stat-value {
     font-size: 1.75rem;
-    font-weight: 700;
+    font-weight: 800;
     color: #000000;
     margin: 0.25rem 0;
     letter-spacing: -0.02em;
@@ -101,7 +102,8 @@ body::before {
 
 .stat-sub {
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #1a1a1a;
+    font-weight: 600;
 }
 
 /* ── Severity Colors ──────────────────────────────────── */

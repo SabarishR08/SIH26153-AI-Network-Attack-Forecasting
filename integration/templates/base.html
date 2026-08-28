@@ -13,17 +13,21 @@
       theme: {
         extend: {
           colors: {
-            surface:  '#0f1117',
-            card:     '#161b22',
-            border:   '#21262d',
-            accent:   '#238636',
-            muted:    '#8b949e',
-            critical: '#f85149',
-            high:     '#e3b341',
-            medium:   '#58a6ff',
-            low:      '#3fb950',
+            surface:  '#080c1a',
+            card:     'rgba(15, 23, 42, 0.6)',
+            border:   'rgba(30, 41, 59, 0.7)',
+            accent:   '#22c55e',
+            muted:    '#94a3b8',
+            critical: '#ef4444',
+            high:     '#f59e0b',
+            medium:   '#3b82f6',
+            low:      '#22c55e',
           },
           fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          backgroundImage: {
+            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+            'gradient-mesh': 'radial-gradient(at 20% 80%, rgba(34,197,94,0.08) 0, transparent 50%), radial-gradient(at 80% 20%, rgba(59,130,246,0.06) 0, transparent 50%), radial-gradient(at 50% 50%, rgba(139,92,246,0.04) 0, transparent 50%)',
+          },
         }
       }
     }
@@ -39,10 +43,10 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
 </head>
 
-<body class="bg-surface text-gray-200 font-sans min-h-screen flex flex-col antialiased">
+<body class="bg-surface text-gray-200 font-sans min-h-screen flex flex-col antialiased" style="background: linear-gradient(135deg, #080c1a 0%, #0d1428 40%, #0a1628 70%, #080c1a 100%); background-attachment: fixed;">
 
   <!-- ── Top nav ─────────────────────────────────────────── -->
-  <header class="border-b border-border bg-card px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+  <header class="border-b px-6 py-3 flex items-center justify-between sticky top-0 z-50" style="background: rgba(15, 23, 42, 0.75); border-color: rgba(30, 41, 59, 0.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
     <div class="flex items-center gap-3">
       <!-- pulse dot -->
       <span class="relative flex h-2.5 w-2.5">

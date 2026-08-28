@@ -1,80 +1,146 @@
-/* NetWatch — SIH26153 Dashboard Styles */
+/* NetWatch — SIH26153 Dashboard Styles (Elegant Redesign) */
+
+/* ── Body background mesh ───────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 15% 85%, rgba(34,197,94,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 15%, rgba(59,130,246,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(139,92,246,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
 
 /* ── Nav links ──────────────────────────────────────────── */
 .nav-link {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 0.375rem;
-  color: #8b949e;
+  border-radius: 0.5rem;
+  color: #64748b;
   font-size: 0.75rem;
-  transition: color 0.15s, background 0.15s;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
 }
-.nav-link:hover { color: #e6edf3; background: #21262d; }
-.nav-active      { color: #e6edf3 !important; background: #21262d; }
+.nav-link:hover {
+  color: #e2e8f0;
+  background: rgba(30, 41, 59, 0.6);
+}
+.nav-active {
+  color: #f1f5f9 !important;
+  background: rgba(30, 41, 59, 0.8);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
 
-/* ── Stat cards ─────────────────────────────────────────── */
+/* ── Stat cards (glassmorphism) ─────────────────────────── */
 .stat-card {
-  background: #161b22;
-  border: 1px solid #21262d;
-  border-radius: 0.75rem;
-  padding: 1rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  border-radius: 0.875rem;
+  padding: 1.25rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.stat-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(59, 130, 246, 0.1);
 }
 .stat-label {
   font-size: 0.7rem;
-  color: #8b949e;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   margin-bottom: 0.5rem;
+  font-weight: 500;
 }
 .stat-value {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #e6edf3;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #f1f5f9;
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 .stat-sub {
   font-size: 0.7rem;
-  color: #8b949e;
-  margin-top: 0.35rem;
+  color: #64748b;
+  margin-top: 0.375rem;
+}
+
+/* ── Glass card ─────────────────────────────────────────── */
+.bg-card {
+  background: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(30, 41, 59, 0.6) !important;
+  border-radius: 0.875rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.bg-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+.bg-card:hover {
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Model badge ────────────────────────────────────────── */
 .model-badge {
   font-size: 0.65rem;
   font-weight: 600;
-  padding: 0.15rem 0.5rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 9999px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* ── Severity pills ─────────────────────────────────────── */
 .sev-critical {
-  background: rgba(248,81,73,0.15);
-  color: #f85149;
-  border: 1px solid rgba(248,81,73,0.3);
+  background: rgba(239,68,68,0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.25);
 }
 .sev-high {
-  background: rgba(227,179,65,0.15);
-  color: #e3b341;
-  border: 1px solid rgba(227,179,65,0.3);
+  background: rgba(245,158,11,0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245,158,11,0.25);
 }
 .sev-medium {
-  background: rgba(88,166,255,0.15);
-  color: #58a6ff;
-  border: 1px solid rgba(88,166,255,0.3);
+  background: rgba(59,130,246,0.12);
+  color: #3b82f6;
+  border: 1px solid rgba(59,130,246,0.25);
 }
 .sev-low {
-  background: rgba(63,185,80,0.15);
-  color: #3fb950;
-  border: 1px solid rgba(63,185,80,0.3);
+  background: rgba(34,197,94,0.12);
+  color: #22c55e;
+  border: 1px solid rgba(34,197,94,0.25);
 }
 
 .sev-pill {
   display: inline-block;
-  padding: 0.1rem 0.45rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 9999px;
   font-size: 0.65rem;
   font-weight: 600;
@@ -83,38 +149,52 @@
 }
 
 /* ── Priority labels ────────────────────────────────────── */
-.priority-CRITICAL { background: rgba(248,81,73,0.2); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
-.priority-HIGH     { background: rgba(227,179,65,0.2); color: #e3b341; border: 1px solid rgba(227,179,65,0.3); }
-.priority-MEDIUM   { background: rgba(88,166,255,0.2); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3); }
-.priority-LOW      { background: rgba(63,185,80,0.2);  color: #3fb950; border: 1px solid rgba(63,185,80,0.3);  }
+.priority-CRITICAL { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+.priority-HIGH     { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
+.priority-MEDIUM   { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.25); }
+.priority-LOW      { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.25);  }
 
 /* ── Filter selects ─────────────────────────────────────── */
 .filter-select {
-  background: #161b22;
-  border: 1px solid #21262d;
-  color: #8b949e;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  color: #94a3b8;
   font-size: 0.75rem;
-  padding: 0.3rem 0.6rem;
-  border-radius: 0.375rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.5rem;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .filter-select:hover,
-.filter-select:focus { border-color: #58a6ff; color: #e6edf3; }
+.filter-select:focus {
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #e2e8f0;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 
 /* ── Table rows ─────────────────────────────────────────── */
-tbody tr:hover { background: rgba(33,38,45,0.6); cursor: pointer; }
+tbody tr {
+  transition: background 0.15s ease;
+}
+tbody tr:hover {
+  background: rgba(30, 41, 59, 0.4);
+  cursor: pointer;
+}
 
 /* ── Drawer ─────────────────────────────────────────────── */
 #event-drawer {
-  box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* ── Forecast probability bar ───────────────────────────── */
 .prob-bar-bg {
   height: 4px;
-  background: #21262d;
+  background: rgba(30, 41, 59, 0.8);
   border-radius: 2px;
   overflow: hidden;
   width: 80px;
@@ -125,36 +205,95 @@ tbody tr:hover { background: rgba(33,38,45,0.6); cursor: pointer; }
 .prob-bar-fill {
   height: 100%;
   border-radius: 2px;
-  transition: width 0.3s;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── Graph tooltip ──────────────────────────────────────── */
 #graph-tooltip {
   pointer-events: none;
   position: fixed;
-  background: #161b22;
-  border: 1px solid #21262d;
-  border-radius: 6px;
-  padding: 6px 10px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  border-radius: 8px;
+  padding: 8px 12px;
   font-size: 11px;
-  color: #e6edf3;
+  color: #e2e8f0;
   z-index: 100;
   display: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 /* ── Scrollbar ───────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0f1117; }
-::-webkit-scrollbar-thumb { background: #21262d; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #30363d; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(51, 65, 85, 0.9);
+}
 
 /* ── Animations ─────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: fadeIn 0.25s ease-out; }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── Stat card entrance stagger ──────────────────────────── */
+.stat-card:nth-child(1) { animation: fadeIn 0.3s 0.0s cubic-bezier(0.4,0,0.2,1) both; }
+.stat-card:nth-child(2) { animation: fadeIn 0.3s 0.05s cubic-bezier(0.4,0,0.2,1) both; }
+.stat-card:nth-child(3) { animation: fadeIn 0.3s 0.10s cubic-bezier(0.4,0,0.2,1) both; }
+.stat-card:nth-child(4) { animation: fadeIn 0.3s 0.15s cubic-bezier(0.4,0,0.2,1) both; }
 
 /* ── Plotly dark overrides ──────────────────────────────── */
 .js-plotly-plot .plotly .main-svg { background: transparent !important; }
 .js-plotly-plot .plotly .bg { fill: transparent !important; }
+
+/* ── Glass morphism utility ─────────────────────────────── */
+.glass {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+/* ── Glow effect for accents ────────────────────────────── */
+.glow-green {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.15);
+}
+.glow-blue {
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+}
+.glow-red {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+}
+
+/* ── Pulse dot (nav) ────────────────────────────────────── */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

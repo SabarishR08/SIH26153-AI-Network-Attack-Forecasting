@@ -32,8 +32,8 @@ networkx==3.2
 pyyaml==6.0.1
 python-dateutil==2.9.0
 
-# ── Packet capture (optional — needs admin/root) ───────────
-# scapy==2.5.0
+# ── Packet capture (needs admin/root for live capture) ─────
+scapy==2.5.0
 
 # ── Testing ────────────────────────────────────────────────
 pytest==7.4.4

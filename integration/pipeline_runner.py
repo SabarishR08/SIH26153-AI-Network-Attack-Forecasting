@@ -19,7 +19,7 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from integration.logging_config import get_logger, setup_logging
 
@@ -58,9 +58,59 @@ def step_generate_traffic(packets_file: Path) -> Dict:
         gen = SyntheticDataGenerator(str(packets_file))
         gen.generate_dataset()
         count = sum(1 for _ in packets_file.open())
-        return {"status": "ok", "packets": count}
+        return {"status": "ok", "packets": count, "mode": "synthetic"}
     except Exception as exc:
         logger.error(f"Traffic generation failed: {exc}")
+        return {"status": "error", "error": str(exc)}
+
+
+def step_live_capture(
+    packets_file: Path,
+    duration: int = 30,
+    interface: Optional[str] = None,
+    bpf_filter: Optional[str] = None,
+) -> Dict:
+    """Step 1 (live) — Capture real traffic using scapy."""
+    logger.info(f"Step 1 (LIVE): Capturing real traffic for {duration}s")
+    try:
+        from integration.packet_capture import PacketCapturer, get_local_ip
+
+        local_ip = get_local_ip()
+        logger.info(f"Local IP: {local_ip}")
+
+        capturer = PacketCapturer(
+            interface=interface,
+            output_file=str(packets_file),
+            bpf_filter=bpf_filter,
+        )
+        capturer.start(timeout=duration)
+
+        # Wait for capture to finish
+        if capturer._capture:
+            capturer._capture.join()
+        capturer.stop()
+
+        count = 0
+        if packets_file.exists():
+            with open(packets_file) as f:
+                count = sum(1 for _ in f)
+
+        return {
+            "status": "ok",
+            "packets": count,
+            "mode": "live",
+            "local_ip": local_ip,
+            "duration_sec": duration,
+            "interface": interface or "auto",
+        }
+    except PermissionError:
+        logger.error(
+            "Live capture requires root/admin privileges. "
+            "Run with: sudo python run.py --live"
+        )
+        return {"status": "error", "error": "Permission denied — run as root/admin"}
+    except Exception as exc:
+        logger.error(f"Live capture failed: {exc}")
         return {"status": "error", "error": str(exc)}
 
 
@@ -208,13 +258,23 @@ def step_build_graph(anomalies_file: Path, graph_json: Path) -> Dict:
 
 # ── Main orchestrator ───────────────────────────────────────
 
-def run_full_pipeline(use_existing_packets: bool = False) -> Dict:
+def run_full_pipeline(
+    use_existing_packets: bool = False,
+    live_mode: bool = False,
+    live_duration: int = 30,
+    live_interface: Optional[str] = None,
+    live_filter: Optional[str] = None,
+) -> Dict:
     """
     Run the complete SIH26153 pipeline.
 
     Args:
         use_existing_packets: if True, skip packet generation and reuse
                               whatever is already in data/packets.jsonl.
+        live_mode: if True, capture real traffic instead of generating synthetic.
+        live_duration: seconds to capture in live mode.
+        live_interface: network interface for live capture (None = auto-detect).
+        live_filter: BPF filter for live capture (None = no filter).
     Returns:
         dict with per-step results and overall summary.
     """
@@ -223,9 +283,16 @@ def run_full_pipeline(use_existing_packets: bool = False) -> Dict:
     results: Dict = {"started_at": datetime.now(UTC).isoformat() + "Z"}
 
     # ── Step 1: Traffic ────────────────────────────────────
-    if use_existing_packets and PACKETS_FILE.exists():
+    if live_mode:
+        results["step1_traffic"] = step_live_capture(
+            PACKETS_FILE,
+            duration=live_duration,
+            interface=live_interface,
+            bpf_filter=live_filter,
+        )
+    elif use_existing_packets and PACKETS_FILE.exists():
         logger.info("Step 1: Reusing existing packets file")
-        results["step1_traffic"] = {"status": "reused", "packets": sum(1 for _ in open(PACKETS_FILE))}
+        results["step1_traffic"] = {"status": "reused", "packets": sum(1 for _ in open(PACKETS_FILE)), "mode": "existing"}
     else:
         results["step1_traffic"] = step_generate_traffic(PACKETS_FILE)
 
@@ -276,7 +343,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run SIH26153 full pipeline")
     parser.add_argument("--reuse-packets", action="store_true",
                         help="Skip packet generation and reuse existing data/packets.jsonl")
+    parser.add_argument("--live", action="store_true",
+                        help="Capture real traffic instead of generating synthetic data")
+    parser.add_argument("--live-duration", type=int, default=30,
+                        help="Seconds to capture in live mode (default: 30)")
+    parser.add_argument("--live-interface", default=None,
+                        help="Network interface for live capture")
+    parser.add_argument("--live-filter", default=None,
+                        help="BPF filter for live capture (e.g. 'tcp port 22')")
     args = parser.parse_args()
 
-    result = run_full_pipeline(use_existing_packets=args.reuse_packets)
+    result = run_full_pipeline(
+        use_existing_packets=args.reuse_packets,
+        live_mode=args.live,
+        live_duration=args.live_duration,
+        live_interface=args.live_interface,
+        live_filter=args.live_filter,
+    )
     print(json.dumps(result, indent=2, default=str))

@@ -2,7 +2,7 @@
 SIH26153 — Entry Point
 
 Usage:
-    # Start the dashboard (runs pipeline first on fresh start)
+    # Start the dashboard (runs synthetic pipeline first on fresh start)
     python run.py
 
     # Run pipeline only, then exit
@@ -13,6 +13,18 @@ Usage:
 
     # Use existing data (skip packet generation)
     python run.py --reuse-data
+
+    # Live mode: capture real traffic for 30s, then run pipeline + dashboard
+    sudo python run.py --live
+
+    # Live mode: capture for 120 seconds
+    sudo python run.py --live --live-duration 120
+
+    # Live mode: capture on specific interface with BPF filter
+    sudo python run.py --live --live-interface eth0 --live-filter "tcp"
+
+    # Continuous monitoring: run forever, detect intrusions in real-time
+    sudo python run.py --monitor
 
 Environment variables (copy .env.example → .env and fill in):
     PORT                        Flask port (default 5000)
@@ -58,10 +70,22 @@ setup_logging()
 logger = get_logger("run")
 
 
-def run_pipeline(reuse_data: bool = False):
+def run_pipeline(
+    reuse_data: bool = False,
+    live_mode: bool = False,
+    live_duration: int = 30,
+    live_interface=None,
+    live_filter=None,
+):
     logger.info("Starting SIH26153 pipeline…")
     from integration.pipeline_runner import run_full_pipeline
-    result = run_full_pipeline(use_existing_packets=reuse_data)
+    result = run_full_pipeline(
+        use_existing_packets=reuse_data,
+        live_mode=live_mode,
+        live_duration=live_duration,
+        live_interface=live_interface,
+        live_filter=live_filter,
+    )
     logger.info("Pipeline result:\n" + json.dumps(result, indent=2, default=str))
     return result
 
@@ -90,14 +114,66 @@ def main():
         "--reuse-data", action="store_true",
         help="Skip packet generation, reuse existing data/packets.jsonl"
     )
+    parser.add_argument(
+        "--live", action="store_true",
+        help="Capture real network traffic instead of generating synthetic data (requires root/admin)"
+    )
+    parser.add_argument(
+        "--live-duration", type=int, default=30,
+        help="Seconds to capture in live mode (default: 30)"
+    )
+    parser.add_argument(
+        "--live-interface", default=None,
+        help="Network interface for live capture (default: auto-detect)"
+    )
+    parser.add_argument(
+        "--live-filter", default=None,
+        help="BPF filter for live capture (e.g. 'tcp port 22')"
+    )
+    parser.add_argument(
+        "--monitor", action="store_true",
+        help="Start live continuous monitoring mode (capture + detect forever)"
+    )
     args = parser.parse_args()
 
+    # Continuous monitoring mode — runs forever until Ctrl+C
+    if args.monitor:
+        from integration.live_processor import LiveProcessor
+        import time
+
+        processor = LiveProcessor(
+            interface=args.live_interface,
+            bpf_filter=args.live_filter,
+        )
+        try:
+            processor.start()
+            # Block until Ctrl+C
+            while processor._running:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\nShutting down...")
+        finally:
+            processor.stop()
+        return
+
     if args.pipeline_only:
-        run_pipeline(reuse_data=args.reuse_data)
+        run_pipeline(
+            reuse_data=args.reuse_data,
+            live_mode=args.live,
+            live_duration=args.live_duration,
+            live_interface=args.live_interface,
+            live_filter=args.live_filter,
+        )
         return
 
     if not args.no_pipeline:
-        run_pipeline(reuse_data=args.reuse_data)
+        run_pipeline(
+            reuse_data=args.reuse_data,
+            live_mode=args.live,
+            live_duration=args.live_duration,
+            live_interface=args.live_interface,
+            live_filter=args.live_filter,
+        )
 
     start_server()
 

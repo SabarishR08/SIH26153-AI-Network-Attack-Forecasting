@@ -95,6 +95,84 @@
     <span>Built with NTAV · PS40 · Killchain Engine</span>
   </footer>
 
+  <!-- Custom cursor animation -->
+  <div id="cursor-dot" style="position:fixed;top:0;left:0;width:8px;height:8px;background:#7c3aed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:normal;"></div>
+  <div id="cursor-ring" style="position:fixed;top:0;left:0;width:36px;height:36px;border:2px solid rgba(124,58,237,0.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s;"></div>
+  <div id="cursor-glow" style="position:fixed;top:0;left:0;width:120px;height:120px;background:radial-gradient(circle,rgba(124,58,237,0.15) 0%,transparent 70%);border-radius:50%;pointer-events:none;z-index:9997;transform:translate(-50%,-50%);transition:opacity .3s;"></div>
+
+  <script>
+    (function() {
+      const dot = document.getElementById('cursor-dot');
+      const ring = document.getElementById('cursor-ring');
+      const glow = document.getElementById('cursor-glow');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+
+      document.addEventListener('mousemove', function(e) {
+        mx = e.clientX; my = e.clientY;
+        dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+        glow.style.left = mx + 'px'; glow.style.top = my + 'px';
+      });
+
+      function animateRing() {
+        rx += (mx - rx) * 0.12;
+        ry += (my - ry) * 0.12;
+        ring.style.left = rx + 'px';
+        ring.style.top = ry + 'px';
+        requestAnimationFrame(animateRing);
+      }
+      animateRing();
+
+      // Hover effects on interactive elements
+      document.querySelectorAll('a, button, [role="button"], .hover\\:bg-border\\/30').forEach(function(el) {
+        el.addEventListener('mouseenter', function() {
+          dot.style.width = '14px'; dot.style.height = '14px';
+          dot.style.background = '#2563eb';
+          ring.style.width = '50px'; ring.style.height = '50px';
+          ring.style.borderColor = 'rgba(37,99,235,0.5)';
+          glow.style.background = 'radial-gradient(circle,rgba(37,99,235,0.2) 0%,transparent 70%)';
+        });
+        el.addEventListener('mouseleave', function() {
+          dot.style.width = '8px'; dot.style.height = '8px';
+          dot.style.background = '#7c3aed';
+          ring.style.width = '36px'; ring.style.height = '36px';
+          ring.style.borderColor = 'rgba(124,58,237,0.5)';
+          glow.style.background = 'radial-gradient(circle,rgba(124,58,237,0.15) 0%,transparent 70%)';
+        });
+      });
+
+      // Click pulse effect
+      document.addEventListener('mousedown', function() {
+        dot.style.width = '6px'; dot.style.height = '6px';
+        ring.style.width = '28px'; ring.style.height = '28px';
+      });
+      document.addEventListener('mouseup', function() {
+        dot.style.width = '8px'; dot.style.height = '8px';
+        ring.style.width = '36px'; ring.style.height = '36px';
+      });
+
+      // Trail sparkle — spawn small fading dots along the path
+      var trailTimer = 0;
+      document.addEventListener('mousemove', function(e) {
+        var now = Date.now();
+        if (now - trailTimer < 40) return; // throttle to ~25fps
+        trailTimer = now;
+        var spark = document.createElement('div');
+        spark.className = 'cursor-trail';
+        spark.style.left = e.clientX + 'px';
+        spark.style.top = e.clientY + 'px';
+        document.body.appendChild(spark);
+        setTimeout(function() { spark.remove(); }, 600);
+      });
+
+      // Hide cursor on touch devices
+      if ('ontouchstart' in window) {
+        dot.style.display = 'none';
+        ring.style.display = 'none';
+        glow.style.display = 'none';
+      }
+    })();
+  </script>
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>

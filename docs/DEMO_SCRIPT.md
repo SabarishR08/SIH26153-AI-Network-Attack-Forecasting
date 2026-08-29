@@ -4,6 +4,8 @@
 **Problem owner:** NTRO  
 **Team:** Sabarish R et al.
 
+> 📖 **First time setup?** See [SETUP.md](../SETUP.md) for full installation instructions including Npcap, Python, and all prerequisites.
+
 ---
 
 ## Before the Demo (setup — do this in advance)

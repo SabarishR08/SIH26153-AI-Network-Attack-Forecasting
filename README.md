@@ -1,4 +1,87 @@
-# 🛡️ SIH26153 — AI-Based Network Attack Forecasting
+# SIH26153 AI Network Attack Forecasting
+
+![License](https://img.shields.io/badge/license-MIT-green) ![Language](https://img.shields.io/badge/language-Python-informational) ![Docker](https://img.shields.io/badge/docker-ready-2496ed) ![Deploy](https://img.shields.io/badge/deploy-Render-46e3b7)
+
+
+## 📌 Overview
+
+AI-Based Network Attack Forecasting from Network Traffic Data — SIH26153 (NTRO)
+
+## 🏗️ Architecture
+
+```text
+Browser / UI
+     │   HTTP
+     ▼
+Flask app
+     │
+     ├──▶ Database — SQLite
+     └──▶ ML models — scikit-learn, XGBoost
+```
+
+## 🧰 Tech Stack
+
+- **Language:** Python
+- **Backend:** Flask
+- **Frontend:** Web frontend (frontend)
+- **Database:** SQLite
+- **ML:** scikit-learn, XGBoost
+- **Deployment:** Docker container / Render (render.yaml)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.10+
+- Docker (optional, for container runs)
+
+### 1. Clone
+
+```bash
+git clone https://github.com/SabarishR08/SIH26153-AI-Network-Attack-Forecasting.git
+cd SIH26153-AI-Network-Attack-Forecasting
+```
+
+### 2. Install dependencies
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env   # then fill in values
+```
+
+Environment variables used: `FLASK_SECRET_KEY`, `FLASK_DEBUG`, `PORT`, `ENABLE_FORECASTING_MODEL`, `ENABLE_KILLCHAIN`.
+
+Most features work without keys; integrations activate when keys are set.
+
+### 4. Run
+
+```bash
+python integration/app.py
+```
+
+```bash
+python run.py
+```
+
+### (Alternative) Run with Docker
+
+```bash
+docker compose up --build
+```
+
+## ☁️ Deployment
+
+Defined in `render.yaml` (web service `netwatch-sih26153-api`) with `autoDeploy` enabled — pushes to the default branch trigger a Render deploy.
+
+
+---
 
 **Problem statement:** AI Based Network Attack Forecasting from Network Traffic Data
 **Problem owner:** NTRO
@@ -138,6 +221,8 @@ See [SETUP.md](SETUP.md#6-using-the-port-scanner-test-tool) for full instruction
 
 ---
 
-## License
+---
 
-MIT License — see individual repos for their respective licenses.
+## 📄 License
+
+[MIT](LICENSE) — © 2026 Sabarish R.
